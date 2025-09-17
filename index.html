@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue + Tailwind + Router (CDN)</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vue 3 via CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <!-- Vue Router via CDN -->
+    <script src="https://unpkg.com/vue-router@4"></script>
+
+    <!-- Optional custom styles -->
+    <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<!-- Vue app will be mounted here -->
+<div id="app" class="flex-1"></div>
+
+<!-- Load components -->
+<script src="components/TaskList.js"></script>
+<script src="components/Home.js"></script>
+<script src="components/About.js"></script>
+<script src="components/App.js"></script>
+
+<!-- Main App Setup -->
+<script>
+    const { createApp } = Vue;
+    const { createRouter, createWebHashHistory } = VueRouter;
+
+    // Define routes mapping URL paths to components
+    const routes = [
+        { path: '/', component: Home },
+        { path: '/about', component: About }
+    ];
+
+    // Create router instance
+    const router = createRouter({
+        history: createWebHashHistory(),
+        routes
+    });
+
+    // Create Vue app using App component
+    const app = createApp(App);
+
+    // Use router in our app
+    app.use(router);
+
+    // Mount app to the #app element
+    app.mount('#app');
+</script>
+</body>
+</html>

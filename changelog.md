@@ -13,3 +13,9 @@ v.0.2.0 feat: UI add task button
 - Created minimal “New Task” button that triggers the create new task form (blank form)
 - No persistence or extra fields yet title-only creation coming next
 
+ v.0.2.1 feat add task form model and in memory task creation
+ - Introduced <TaskForm> modal with title field and Save/Cancel
+ - Added basic validation (title required)
+ - Created tasks are stored in memory and rendered in a simple list (title only)
+ - new task button opens taskform modal and creates an event
+

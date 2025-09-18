@@ -9,35 +9,50 @@ const App = {
       
       <!-- Main content -->
       <main>
-        <div class="flex justify-end mb-4">
+          <div class="flex justify-end mb-4">
             <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
                     @click="openForm">New Task</button>
-        </div>
+          </div>
 
-        <p class="text-gray-500 text-center">Task creation coming.</p>
+          <task-form v-if="showForm"
+                     @close="showForm=false"
+                     @create="onCreate"></task-form>
 
-        <!-- Add TaskForm component here -->
-        <task-form v-if="showForm" @close="showForm = false" @create="onCreate"></task-form>
-
-      </main>
+          <ul v-if="tasks.length" class="space-y-3">
+            <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
+              <div class="font-semibold">{{ t.title }}</div>
+            </li>
+          </ul>
+          <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
+        </main>
     </div>
   `,
     components: { 'task-form': TaskForm },
     data(){
       return {
         showForm: false,
-        tasks: []   // in-memory for now
+        tasks: this.loadTasks()   // in-memory for now
       };
         // TODO: Add your components here
         //'example': ExampleComponent
     },
     methods:{
       openForm(){ this.showForm = true; },
+      uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); },
+      saveTasks(){ localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks)); },
+      loadTasks(){ try { return JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]'); } catch { return []; } },
       onCreate(payload){
         const title = String(payload.title || '').trim();
         if (!title) return;
-        const task = { id: Math.random().toString(36).slice(2), title };
-        this.tasks = [task, ...this.tasks];
+
+        const task = {
+          id: this.uid(),
+          title,
+          createdAt: new Date().toISOString()
+        };
+
+        this.tasks = [task, ...this.tasks].sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        this.saveTasks();
         this.showForm = false;
       }
     }

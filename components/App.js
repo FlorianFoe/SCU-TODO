@@ -9,7 +9,13 @@ const App = {
       
       <!-- Main content -->
       <main>
-        
+        <div class="flex justify-end mb-4">
+            <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
+                    @click="openForm">New Task</button>
+          </div>
+
+          <p class="text-gray-500 text-center">Task creation coming.</p>
+
         <!-- TODO: Add here the components -->
         <!-- <example></example> -->
 
@@ -19,5 +25,8 @@ const App = {
     components: {
         // TODO: Add your components here
         //'example': ExampleComponent
+    },
+    methods:{
+      openForm(){ alert('Task creation modal will be added in Stage 2.'); }
     }
-};
+}

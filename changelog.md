@@ -19,3 +19,7 @@ v.0.2.0 feat: UI add task button
  - Created tasks are stored in memory and rendered in a simple list (title only)
  - new task button opens taskform modal and creates an event
 
+v.0.2.3  feature update: create task - persist on page
+- implement local storage for task persistenece
+- load tasks onto the web page
+- time stamp to display newest tasks at the top of list (to be replaced with priority function in the future)

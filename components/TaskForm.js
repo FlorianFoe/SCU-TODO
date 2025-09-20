@@ -1,12 +1,21 @@
 const TaskForm = {
-    emits: ['close','create'],
-    data(){ return { title: '', error: '' }; },
-    methods:{
-      submit(){
-        const title = String(this.title || '').trim();
-        if (!title) { this.error = 'Title is required.'; return; }
-        this.$emit('create', { title });
-      }
+    emits: ['close', 'create'],
+    data() {
+        return {title: '', dueDate: Date(), error: ''};
+    },
+    methods: {
+        submit() {
+            const title = String(this.title || '').trim();
+            const dueDate = new Date(this.dueDate);
+            if (!dueDate) {
+                this.info('No due date.')
+            }
+            if (!title) {
+                this.error = 'Title is required.';
+                return;
+            }
+            this.$emit('create', {title, dueDate});
+        }
     },
     template: `
       <div class="fixed inset-0 bg-slate-900/60 p-4 flex items-start justify-center z-50">
@@ -19,9 +28,14 @@ const TaskForm = {
           <form @submit.prevent="submit">
             <div class="p-4 space-y-3">
               <div>
-                <label class="text-sm text-slate-600">Title</label>
+                <label class="text-sm text-slate-600">Title<span class="text-red-600">*</span></label>
                 <input v-model="title" type="text" required class="w-full border rounded-lg px-3 py-2" placeholder="What needs to be done?">
               </div>
+              <div>
+                <label class="text-sm text-slate-600">Due Date</label>
+                <input v-model="dueDate" type="date" class="w-full border rounded-lg px-3 py-2">
+              </div>
+              
               <p v-if="error" class="text-rose-700 text-sm">{{ error }}</p>
             </div>
 
@@ -33,4 +47,4 @@ const TaskForm = {
         </div>
       </div>
     `
-  };
+};

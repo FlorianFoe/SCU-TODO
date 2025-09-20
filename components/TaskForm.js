@@ -1,11 +1,16 @@
-const TaskForm = {
+  const TaskForm = {
     emits: ['close','create'],
-    data(){ return { title: '', error: '' }; },
+    data(){
+      return { title: '', description: '', error: '' };
+    },
     methods:{
       submit(){
         const title = String(this.title || '').trim();
         if (!title) { this.error = 'Title is required.'; return; }
-        this.$emit('create', { title });
+        this.$emit('create', {
+          title,
+          description: String(this.description || '').trim()
+        });
       }
     },
     template: `
@@ -17,11 +22,19 @@ const TaskForm = {
           </header>
 
           <form @submit.prevent="submit">
-            <div class="p-4 space-y-3">
+            <div class="p-4 space-y-4">
               <div>
-                <label class="text-sm text-slate-600">Title</label>
-                <input v-model="title" type="text" required class="w-full border rounded-lg px-3 py-2" placeholder="What needs to be done?">
+                <label for="fTitle" class="text-sm text-slate-600">Title</label>
+                <input id="fTitle" v-model="title" type="text" required
+                       class="w-full border rounded-lg px-3 py-2" placeholder="What needs to be done?">
               </div>
+
+              <div>
+                <label for="fDesc" class="text-sm text-slate-600">Description</label>
+                <textarea id="fDesc" v-model="description" rows="4"
+                          class="w-full border rounded-lg px-3 py-2" placeholder="Optional details..."></textarea>
+              </div>
+
               <p v-if="error" class="text-rose-700 text-sm">{{ error }}</p>
             </div>
 

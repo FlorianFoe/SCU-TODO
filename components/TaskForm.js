@@ -1,20 +1,26 @@
 const TaskForm = {
     emits: ['close', 'create'],
     data() {
-        return {title: '', dueDate: Date(), error: ''};
+        return {title: '', dueDate: '', error: ''};
     },
     methods: {
         submit() {
             const title = String(this.title || '').trim();
-            const dueDate = new Date(this.dueDate);
-            if (!dueDate) {
-                this.info('No due date.')
+            let dueDate = String(this.dueDate || '').trim();
+
+            if (this.dueDate !== '') {
+                const dueDateObj = new Date(this.dueDate);
+                if (dueDateObj > new Date() && dueDateObj) {
+                    this.error = 'Due date must be in the future.';
+                    return;
+                }
             }
             if (!title) {
                 this.error = 'Title is required.';
                 return;
             }
-            this.$emit('create', {title, dueDate});
+            this.$emit('create', {title, dueDate: dueDate || null});
+            this.$emit('close');
         }
     },
     template: `

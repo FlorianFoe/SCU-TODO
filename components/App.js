@@ -56,14 +56,16 @@ const App = {
         },
         onCreate(payload) {
             const title = String(payload.title || '').trim();
-            const dueDate = new Date(payload.dueDate);
-            if (dueDate.toString() === 'Invalid Date') return;
+            let dueDate = String(payload.dueDate || '').trim();
+            if (!dueDate) {
+                dueDate = "No due date";
+            }
             if (!title) return;
 
             const task = {
                 id: this.uid(),
                 title,
-                dueDate: dueDate.toISOString().split('T')[0],
+                dueDate,
                 createdAt: new Date().toISOString()
             };
 

@@ -17,29 +17,39 @@ const App = {
           <task-form v-if="showForm"
                      @close="showForm=false"
                      @create="onCreate"></task-form>
+                     
+          <dueDate-form v-if="showDueDateForm"
+                     @close="showDueDateForm=false"
+                     @create="onCreateDueDateForm"></dueDate-form>           
 
           <ul v-if="tasks.length" class="space-y-3">
             <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
               <div class="font-semibold">{{ t.title }}</div>
-              <div class="sm:font-gr">{{ t.dueDate }}</div>
+              <div class="flex gap-4 items-center">
+                <span>{{ t.dueDate }}</span>
+                <div @click="openDueDateForm" v-if="t.dueDate.length" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
+              </div>  
             </li>
           </ul>
           <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
         </main>
     </div>
-  `,
-    components: {'task-form': TaskForm},
-    data() {
+  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm}, data() {
         return {
             showForm: false,
-            tasks: this.loadTasks()   // in-memory for now
+            tasks: this.loadTasks(),
+            showDueDateForm: false,
+            editingTaskId: null // Track which task is being edited
         };
-        // TODO: Add your components here
-        //'example': ExampleComponent
-    },
-    methods: {
+    }, methods: {
         openForm() {
             this.showForm = true;
+        },
+        openDueDateForm(e) {
+            // Find the task by id and set it as the current editing task
+            const id = e.target.id;
+            this.editingTaskId = id;
+            this.showDueDateForm = true;
         },
         uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -63,15 +73,26 @@ const App = {
             if (!title) return;
 
             const task = {
-                id: this.uid(),
-                title,
-                dueDate,
-                createdAt: new Date().toISOString()
+                id: this.uid(), title, dueDate, createdAt: new Date().toISOString()
             };
 
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
             this.showForm = false;
+        },
+        onCreateDueDateForm(payload) {
+            const dueDate = String(payload.dueDate || '').trim();
+            if (!dueDate || !this.editingTaskId) {
+                this.showDueDateForm = false;
+                return;
+            }
+            // Update the due date of the correct task
+            this.tasks = this.tasks.map(task =>
+                task.id === this.editingTaskId ? { ...task, dueDate } : task
+            );
+            this.saveTasks();
+            this.showDueDateForm = false;
+            this.editingTaskId = null;
         }
     }
 }

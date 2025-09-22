@@ -65,6 +65,8 @@ const App = {
             const id = e.target.id;
             this.editingTaskId = id;
             this.showDueDateForm = true;
+        }, openImportForm() {
+            this.showImportForm = true;
         }, uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
         }, saveTasks() {

@@ -9,12 +9,10 @@ const DueDateForm = {
 
             if (this.dueDate !== '') {
                 const dueDateObj = new Date(this.dueDate);
-                if (dueDateObj < new Date() && dueDateObj) {
+                if (dueDateObj < new Date()+1 && dueDateObj) {
                     this.error = 'Due date must be in the future.';
                     return;
                 }
-            } else {
-                dueDate = "No due date";
             }
 
             this.$emit('create', {dueDate: dueDate || null});

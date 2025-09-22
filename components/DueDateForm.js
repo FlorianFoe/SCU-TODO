@@ -1,11 +1,10 @@
-const TaskForm = {
+const DueDateForm = {
     emits: ['close', 'create'],
     data() {
-        return {title: '', description: '', dueDate: '', error: ''};
+        return {dueDate: '', error: ''};
     },
     methods: {
         submit() {
-            const title = String(this.title || '').trim();
             let dueDate = String(this.dueDate || '').trim();
 
             if (this.dueDate !== '') {
@@ -15,13 +14,8 @@ const TaskForm = {
                     return;
                 }
             }
-            if (!title) {
-                this.error = 'Title is required.';
-                return;
-            }
-            this.$emit('create', {title,
-                description: String(this.description || '').trim(),
-                dueDate: dueDate || null});
+
+            this.$emit('create', {dueDate: dueDate || null});
             this.$emit('close');
         }
     },
@@ -29,23 +23,12 @@ const TaskForm = {
       <div class="fixed inset-0 bg-slate-900/60 p-4 flex items-start justify-center z-50">
         <div class="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden">
           <header class="px-4 py-3 border-b flex items-center justify-between">
-            <h3 class="font-semibold">Add a task</h3>
+            <h3 class="font-semibold">Edit a task due date</h3>
             <button class="px-2 py-1 border rounded-lg" @click="$emit('close')" aria-label="Close">✖️</button>
           </header>
 
           <form @submit.prevent="submit">
-            <div class="p-4 space-y-4">
-              <div>
-                <label for="fTitle" class="text-sm text-slate-600">Title<span class="text-red-600">*</span></label>
-                <input id="fTitle" v-model="title" type="text" required
-                       class="w-full border rounded-lg px-3 py-2" placeholder="What needs to be done?">
-              </div>
-
-              <div>
-                <label for="fDesc" class="text-sm text-slate-600">Description</label>
-                <textarea id="fDesc" v-model="description" rows="4"
-                          class="w-full border rounded-lg px-3 py-2" placeholder="Optional details..."></textarea>
-              </div>
+            <div class="p-4 space-y-3">
               <div>
                 <label class="text-sm text-slate-600">Due Date</label>
                 <input v-model="dueDate" type="date" class="w-full border rounded-lg px-3 py-2">

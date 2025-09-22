@@ -3,6 +3,7 @@ import {createTask} from "../utils/task.js";
 
 const App = {
     template: `
+
     <div>
       <!-- Sticky top header -->
       <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b">
@@ -55,15 +56,34 @@ const App = {
           </ul>
           <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
         </main>
+        
+        <div title="Import Confirmation Dialog" v-if="showImportConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h2 class="text-lg font-bold mb-2">Import Tasks</h2>
+            <p class="mb-3">You are about to import the following tasks:</p>
+            <ul class="mb-4 max-h-40 overflow-y-auto">
+              <li v-for="t in importedTasksPreview" :key="t.id" class="text-gray-700">• {{ t.title }}</li>
+            </ul>
+            <div class="flex justify-end gap-2">
+              <button @click="cancelImport" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+              <button @click="confirmImport" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Confirm</button>
+            </div>
+          </div>
+        </div>
+
     </div>
-  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': createTask}, data() {
+  `, components: {
+        'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': createTask
+    }, data() {
         return {
             showForm: false,
             showDueDateForm: false,
             showImportForm: false,
             tasks: this.loadTasks(),
             editingTaskId: null,
-            q: ''
+            q: '',
+            showImportConfirm: false,
+            importedTasksPreview: [],
         };
     }, methods: {
         openForm() {
@@ -99,7 +119,7 @@ const App = {
             }
             if (!title) return;
 
-            const task = createTask({ title, dueDate, description });
+            const task = createTask({title, dueDate, description});
             // TODO: Add new data properties here if needed!!!
 
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -125,11 +145,11 @@ const App = {
                 try {
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
-                        // Validate and sanitize imported tasks
-                        const sanitizedTasks = importedTasks.map(t => createTask(t)).filter(t => t.title); // Only keep tasks with a title
-                        this.tasks = [...sanitizedTasks, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                        this.saveTasks();
-                        this.showDueDateForm = false;
+                        const sanitizedTasks = importedTasks.map(t => createTask(t)).filter(t => t.title);
+                        if (sanitizedTasks.length) {
+                            this.importedTasksPreview = sanitizedTasks;
+                            this.showImportConfirm = true;
+                        }
                     } else {
                         alert('Imported file must contain an array of tasks.');
                     }
@@ -138,6 +158,14 @@ const App = {
                 }
             };
             reader.readAsText(file);
+        }, confirmImport() {
+            this.tasks = [...this.importedTasksPreview, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            this.showImportConfirm = false;
+            this.importedTasksPreview = [];
+            this.saveTasks();
+        }, cancelImport() {
+            this.showImportConfirm = false;
+            this.importedTasksPreview = [];
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

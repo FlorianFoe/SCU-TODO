@@ -9,11 +9,17 @@ const App = {
       
       <!-- Main content -->
       <main>
-          <div class="flex justify-end mb-4">
+          <div class="flex justify-end gap-3 mb-4">
             <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
                     @click="openForm">New Task</button>
+            <button class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold"
+                    @click="openImportForm">Import Tasks</button>
           </div>
-
+          
+          <import-form v-if="showImportForm"
+                        @close="showImportForm=false"
+                        @import="onImport"></import-form>
+          
           <task-form v-if="showForm"
                      @close="showForm=false"
                      @create="onCreate"></task-form>
@@ -37,9 +43,9 @@ const App = {
           <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
         </main>
     </div>
-  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm}, data() {
+  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm}, data() {
         return {
-            showForm: false, tasks: this.loadTasks(), showDueDateForm: false, editingTaskId: null
+            showForm: false, showDueDateForm: false, showImportForm: false, tasks: this.loadTasks(), editingTaskId: null
         };
     }, methods: {
         openForm() {
@@ -49,6 +55,8 @@ const App = {
             const id = e.target.id;
             this.editingTaskId = id;
             this.showDueDateForm = true;
+        }, openImportForm() {
+            this.showImportForm = true;
         }, uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
         }, saveTasks() {
@@ -87,6 +95,34 @@ const App = {
             this.saveTasks();
             this.showDueDateForm = false;
             this.editingTaskId = null;
+        }, onImport(payload) {
+            const file = payload.tasksFile;
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedTasks = JSON.parse(e.target.result);
+                    if (Array.isArray(importedTasks)) {
+                        // Validate and sanitize imported tasks
+                        const sanitizedTasks = importedTasks.map(t => ({
+                            id: this.uid(),
+                            title: String(t.title || '').trim(),
+                            dueDate: t.dueDate ? String(t.dueDate).trim() : "No due date",
+                            createdAt: new Date().toISOString()
+                        })).filter(t => t.title); // Only keep tasks with a title
+
+                        this.tasks = [...sanitizedTasks, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                        this.saveTasks();
+                        this.showDueDateForm = false;
+                    } else {
+                        alert('Imported file must contain an array of tasks.');
+                    }
+                } catch {
+                    alert('Failed to import tasks. Please ensure the file is a valid JSON.');
+                }
+            };
+            reader.readAsText(file);
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

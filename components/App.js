@@ -26,11 +26,11 @@ const App = {
             <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
               <div class="font-semibold flex justify-between items-center mb-2">
                   <span>{{ t.title }}</span>
-                  <div v-if="t.dueDate.length" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
+                  <div v-if="true" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
               </div>
               <div class="flex gap-4 items-center">
                 <span>{{ t.dueDate }}</span>
-                <div @click="openDueDateForm" v-if="t.dueDate.length" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
+                <div @click="openDueDateForm" v-if="true" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
               </div>  
             </li>
           </ul>
@@ -55,7 +55,10 @@ const App = {
             localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
         }, loadTasks() {
             try {
-                return JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                return tasks.map(task => ({
+                    ...task, dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
+                }));
             } catch {
                 return [];
             }

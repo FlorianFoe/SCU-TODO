@@ -11,17 +11,17 @@ const App = {
 
           <div class="ml-auto flex items-center gap-2">
             <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
+            <button class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold"
+                    @click="openImportForm">Import Tasks</button>
           </div>
+          
         </div>
       </header>
       
       <!-- Main content -->
       <main class="container mx-auto px-4 py-8 max-w-2xl">
           <div class="flex justify-end gap-3 mb-4">
-            <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
-                    @click="openForm">New Task</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold"
-                    @click="openImportForm">Import Tasks</button>
+
           </div>
           
           <import-form v-if="showImportForm"
@@ -55,7 +55,12 @@ const App = {
     </div>
   `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm}, data() {
         return {
-            showForm: false, showDueDateForm: false, showImportForm: false, tasks: this.loadTasks(), editingTaskId: null, q: ''
+            showForm: false,
+            showDueDateForm: false,
+            showImportForm: false,
+            tasks: this.loadTasks(),
+            editingTaskId: null,
+            q: ''
         };
     }, methods: {
         openForm() {
@@ -65,6 +70,8 @@ const App = {
             const id = e.target.id;
             this.editingTaskId = id;
             this.showDueDateForm = true;
+        }, openImportForm() {
+            this.showImportForm = true;
         }, uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
         }, saveTasks() {
@@ -89,13 +96,9 @@ const App = {
             }
             if (!title) return;
 
-        const task = {
-          id: this.uid(),
-          title,
-            description,
-            dueDate,
-          createdAt: new Date().toISOString()
-        };
+            const task = {
+                id: this.uid(), title, description, dueDate, createdAt: new Date().toISOString()
+            };
 
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
@@ -162,4 +165,4 @@ const App = {
             return `Due in ${diffDays} days`;
         }
     }
-  };
+};

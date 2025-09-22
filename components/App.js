@@ -1,3 +1,6 @@
+import {createTask} from "../utils/task.js";
+
+
 const App = {
     template: `
     <div>
@@ -53,7 +56,7 @@ const App = {
           <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
         </main>
     </div>
-  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm}, data() {
+  `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': createTask}, data() {
         return {
             showForm: false,
             showDueDateForm: false,
@@ -96,9 +99,8 @@ const App = {
             }
             if (!title) return;
 
-            const task = {
-                id: this.uid(), title, description, dueDate, createdAt: new Date().toISOString()
-            };
+            const task = createTask({ title, dueDate, description });
+            // TODO: Add new data properties here if needed!!!
 
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
@@ -124,13 +126,7 @@ const App = {
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
                         // Validate and sanitize imported tasks
-                        const sanitizedTasks = importedTasks.map(t => ({
-                            id: this.uid(),
-                            title: String(t.title || '').trim(),
-                            dueDate: t.dueDate ? String(t.dueDate).trim() : "No due date",
-                            createdAt: new Date().toISOString()
-                        })).filter(t => t.title); // Only keep tasks with a title
-
+                        const sanitizedTasks = importedTasks.map(t => createTask(t)).filter(t => t.title); // Only keep tasks with a title
                         this.tasks = [...sanitizedTasks, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                         this.saveTasks();
                         this.showDueDateForm = false;
@@ -166,3 +162,5 @@ const App = {
         }
     }
 };
+
+export default App;

@@ -22,14 +22,17 @@
 <script src="components/TaskForm.js"></script>
 <script src="components/DueDateForm.js"></script>
 <script src="components/ImportForm.js"></script>
-<script src="components/App.js"></script>
-
-<!-- Main App Setup -->
+<script type="module">
+    import App from './components/App.js';
+    const { createApp } = Vue;
+    const app = createApp(App);
+    app.mount('#app');
+</script><!-- Main App Setup -->
 <script>
     const {createApp} = Vue;
 
     // Create Vue app using App component
-    const app = createApp(App);
+    const app = createApp(window.App);
 
     // Mount app to the #app element
     app.mount('#app');

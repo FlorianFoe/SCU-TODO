@@ -1,14 +1,22 @@
 const App = {
     template: `
-    <div class="container mx-auto px-4 py-8 max-w-2xl">
-      <!-- Header -->
-      <header class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-blue-600 mb-2">SCU TODO</h1>
-        <p class="text-gray-600">Efficient task management</p>
+    <div>
+      <!-- Sticky top header -->
+      <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b">
+        <div class="max-w-6xl mx-auto p-3 flex items-center gap-3">
+          <svg class="w-6 h-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          <div class="font-bold">To Do list Task Manager</div>
+
+          <div class="ml-auto flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
+          </div>
+        </div>
       </header>
       
       <!-- Main content -->
-      <main>
+      <main class="container mx-auto px-4 py-8 max-w-2xl">
           <div class="flex justify-end gap-3 mb-4">
             <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
                     @click="openForm">New Task</button>
@@ -20,6 +28,7 @@ const App = {
                         @close="showImportForm=false"
                         @import="onImport"></import-form>
           
+
           <task-form v-if="showForm"
                      @close="showForm=false"
                      @create="onCreate"></task-form>
@@ -32,11 +41,12 @@ const App = {
             <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
               <div class="font-semibold flex justify-between items-center mb-2">
                   <span>{{ t.title }}</span>
-                  <div v-if="t.dueDate.length" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
+                  <div v-if="true" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
               </div>
+              <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1">{{ t.description }}</div>
               <div class="flex gap-4 items-center">
                 <span>{{ t.dueDate }}</span>
-                <div @click="openDueDateForm" v-if="t.dueDate.length" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
+                <div @click="openDueDateForm" v-if="true" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
               </div>  
             </li>
           </ul>
@@ -45,7 +55,7 @@ const App = {
     </div>
   `, components: {'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm}, data() {
         return {
-            showForm: false, showDueDateForm: false, showImportForm: false, tasks: this.loadTasks(), editingTaskId: null
+            showForm: false, showDueDateForm: false, showImportForm: false, tasks: this.loadTasks(), editingTaskId: null, q: ''
         };
     }, methods: {
         openForm() {
@@ -55,20 +65,22 @@ const App = {
             const id = e.target.id;
             this.editingTaskId = id;
             this.showDueDateForm = true;
-        }, openImportForm() {
-            this.showImportForm = true;
         }, uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
         }, saveTasks() {
             localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
         }, loadTasks() {
             try {
-                return JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                return tasks.map(task => ({
+                    ...task, dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
+                }));
             } catch {
                 return [];
             }
         }, onCreate(payload) {
             const title = String(payload.title || '').trim();
+            const description = String(payload.description || '').trim();
             let dueDate = String(payload.dueDate || '').trim();
             if (dueDate !== '') {
                 const dueDate = new Date(payload.dueDate).toISOString();
@@ -77,9 +89,13 @@ const App = {
             }
             if (!title) return;
 
-            const task = {
-                id: this.uid(), title, dueDate, createdAt: new Date().toISOString()
-            };
+        const task = {
+          id: this.uid(),
+          title,
+            description,
+            dueDate,
+          createdAt: new Date().toISOString()
+        };
 
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
@@ -146,4 +162,4 @@ const App = {
             return `Due in ${diffDays} days`;
         }
     }
-}
+  };

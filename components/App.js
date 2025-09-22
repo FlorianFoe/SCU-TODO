@@ -55,7 +55,10 @@ const App = {
             localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
         }, loadTasks() {
             try {
-                return JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                return tasks.map(task => ({
+                    ...task, dueDate: typeof task.dueDate === 'undefined' ? '' : task.dueDate
+                }));
             } catch {
                 return [];
             }

@@ -110,6 +110,10 @@ const App = {
             this.saveTasks();
             this.showDueDateForm = false;
             this.editingTaskId = null;
+        }, deleteTask(taskId) {
+            // Remove the task with the given id
+            this.tasks = this.tasks.filter(task => task.id !== taskId);
+            this.saveTasks();
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

@@ -40,6 +40,10 @@
               <span class="opacity-80">Completed</span>
               <span class="font-semibold">{{ completedCount }}</span>
             </span>
+            <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-sm text-rose-700">
+              <span class="opacity-80">Overdue</span>
+              <span class="font-semibold">{{ overdueCount }}</span>
+            </span>
           </div>
 
           <button
@@ -110,7 +114,17 @@
     computed: {
       completedCount(){ return this.tasks.filter(t => t.completed).length; },
       totalCount(){ return this.tasks.length; },
-      activeCount(){ return this.tasks.filter(t => !t.completed).length; }
+      activeCount(){ return this.tasks.filter(t => !t.completed).length; },
+      overdueCount(){
+        const now = new Date();
+        return this.tasks.filter(t => {
+          if (t.completed) return false;
+          if (!t.dueDate || t.dueDate === 'No due date') return false;
+          const d = new Date(t.dueDate);
+          if (isNaN(d.getTime())) return false;
+          return d < now;
+        }).length;
+      },
     },
     methods: {
       openForm() {

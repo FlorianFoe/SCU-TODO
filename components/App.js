@@ -25,16 +25,28 @@ const App = {
                      @create="onCreateDueDateForm"></dueDate-form>           
 
           <ul v-if="tasks.length" class="space-y-3">
-            <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
-              <div class="font-semibold flex justify-between items-center mb-2">
-                  <span>{{ t.title }}</span>
-                  <div v-if="true" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
+            <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
+              <!-- Main content container that slides when hovering -->
+              <div class="flex transition-transform duration-300">
+                <!-- Todo content -->
+                <div class="flex-1 p-3">
+                  <div class="font-semibold flex justify-between items-center mb-2">
+                      <span>{{ t.title }}</span>
+                      <div v-if="true" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
+                  </div>
+                  <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1">{{ t.description }}</div>
+                  <div class="flex gap-4 items-center">
+                    <span>{{ t.dueDate }}</span>
+                    <div @click="openDueDateForm" v-if="true" :id="t.id" class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>
+                  </div>
+                </div>
+                
+                <div class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
+                     @click="deleteTask(t.id)"
+                     title="Delete Task">
+                  <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
+                </div>
               </div>
-              <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1">{{ t.description }}</div>
-              <div class="flex gap-4 items-center">
-                <span>{{ t.dueDate }}</span>
-                <div @click="openDueDateForm" v-if="true" :id="t.id" class=" rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer ">✎</div>
-              </div>  
             </li>
           </ul>
           <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>

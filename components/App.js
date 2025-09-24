@@ -56,50 +56,56 @@ const App = {
 
         <!-- Task list -->
         <ul v-if="tasks.length" class="space-y-3">
-          <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl p-3">
-            <!-- Row: checkbox + title + due badge -->
+          <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
             <div class="flex transition-transform duration-300">
-                <!-- Todo content -->
-                <div class="flex-1 p-3">
-                  <!-- Check-off (existing feature) -->
-                  <input type="checkbox"
-                         class="mt-1 w-5 h-5"
-                         :checked="t.completed"
-                         @change="toggleComplete(t)" />
-    
-                  <div class="flex-1 min-w-0">
-                    <div class="font-semibold flex justify-between items-center">
-                      <span :class="{'line-through text-slate-400': t.completed}">
-                        {{ t.title }}
-                      </span>
-                      <!-- Due badge (unchanged logic) -->
-                      <div v-if="true"
-                           :id="t.id"
-                           class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white"
-                           :class="getDueDateBgClass(t.dueDate)">
-                           {{ getDueDateContent(t.dueDate) }}
+          
+            <!-- Row: checkbox + title + due badge -->
+                <div class="flex-1">
+                    <div class="flex gap-3 items-start h-full mb-2 p-3">
+                      <!-- Check-off (existing feature) -->
+                      <input type="checkbox"
+                             class="mt-1 w-5 h-5"
+                             :checked="t.completed"
+                             @change="toggleComplete(t)" />
+        
+                      <!-- Todo content -->
+                      <div class="flex-1 min-w-0">
+                        <div class="font-semibold flex justify-between items-center">
+                          <span :class="{'line-through text-slate-400': t.completed}">
+                            {{ t.title }}
+                          </span>
+                          <!-- Due badge (unchanged logic) -->
+                          <div v-if="true"
+                               :id="t.id"
+                               class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white"
+                               :class="getDueDateBgClass(t.dueDate)">
+                               {{ getDueDateContent(t.dueDate) }}
+                          </div>
+                        </div>
+        
+                        <!-- Description -->
+                        <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1 max-w-lg">
+                          {{ t.description }}
+                        </div>
+        
+                        <!-- Due date text + edit button -->
+                        <div class="flex gap-4 items-center mt-2">
+                          <span>{{ t.dueDate }}</span>
+                          <div @click="openDueDateForm"
+                               v-if="true"
+                               :id="t.id"
+                               class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>
+                        </div>
                       </div>
-                    </div>
-    
-                    <!-- Description -->
-                    <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1">
-                      {{ t.description }}
-                    </div>
-    
-                    <!-- Due date text + edit button -->
-                    <div class="flex gap-4 items-center mt-2">
-                      <span>{{ t.dueDate }}</span>
-                      <div @click="openDueDateForm"
-                           v-if="true"
-                           :id="t.id"
-                           class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>
+        
                     </div>
                 </div>
-                <div class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
+            
+              <!-- Delete button -->
+              <div class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
                      @click="deleteTask(t.id)"
                      title="Delete Task">
-                  <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
-                </div>
+                <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
               </div>
             </div>
           </li>

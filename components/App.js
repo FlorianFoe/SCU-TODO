@@ -34,7 +34,7 @@ const App = {
                       <span>{{ t.title }}</span>
                       <div v-if="true" :id="t.id" class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white" :class="getDueDateBgClass(t.dueDate)">{{getDueDateContent(t.dueDate)}}</div>
                   </div>
-                  <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1">{{ t.description }}</div>
+                  <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1 max-w-lg">{{ t.description }}</div>
                   <div class="flex gap-4 items-center">
                     <span>{{ t.dueDate }}</span>
                     <div @click="openDueDateForm" v-if="true" :id="t.id" class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>

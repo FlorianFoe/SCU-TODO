@@ -15,8 +15,15 @@ const App = {
 
           <div class="ml-auto flex items-center gap-2">
             <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold"
-                    @click="openImportForm">Import Tasks</button>
+            <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600" 
+                    @click="openImportForm" 
+                    title="Import Tasks">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
           </div>
           
         </div>

@@ -23,6 +23,15 @@ const App = {
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
             </button>
+            <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600" 
+                    @click="exportTasks" 
+                    title="Export Tasks">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </button>
             <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
           </div>
           
@@ -173,6 +182,8 @@ const App = {
         }, cancelImport() {
             this.showImportConfirm = false;
             this.importedTasksPreview = [];
+        }, exportTasks() {
+            // TODO: Implement export functionality
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

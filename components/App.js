@@ -1,4 +1,3 @@
-import {createTask} from "../utils/task.js";
 
 
 const App = {
@@ -73,7 +72,7 @@ const App = {
 
     </div>
   `, components: {
-        'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': createTask
+        'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': TaskUtils.createTask
     }, data() {
         return {
             showForm: false,
@@ -190,5 +189,3 @@ const App = {
         }
     }
 };
-
-export default App;

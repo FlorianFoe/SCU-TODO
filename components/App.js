@@ -14,7 +14,6 @@ const App = {
           <div class="font-bold">To Do list Task Manager</div>
 
           <div class="ml-auto flex items-center gap-2">
-            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
             <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600" 
                     @click="openImportForm" 
                     title="Import Tasks">
@@ -24,6 +23,7 @@ const App = {
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
             </button>
+            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
           </div>
           
         </div>

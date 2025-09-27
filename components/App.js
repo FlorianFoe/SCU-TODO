@@ -104,6 +104,21 @@ const App = {
                                class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>
                         </div>
                       </div>
+                        
+                      <!-- Import confirmation dialog -->
+                      <div title="Import Confirmation Dialog" v-if="showImportConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                          <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+                            <h2 class="text-lg font-bold mb-2">Import Tasks</h2>
+                                <p class="mb-3">You are about to import the following tasks:</p>
+                                <ul class="mb-4 max-h-40 overflow-y-auto">
+                                  <li v-for="t in importedTasksPreview" :key="t.id" class="text-gray-700">• {{ t.title }}</li>
+                                </ul>
+                                <div class="flex justify-end gap-2">
+                                  <button @click="cancelImport" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                                  <button @click="confirmImport" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Confirm</button>
+                                </div>
+                          </div>
+                      </div>
         
                     </div>
                 </div>
@@ -121,11 +136,12 @@ const App = {
         <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
       </main>
     </div>
-    `,
-    components: {
-        'task-form': TaskForm, 'dueDate-form': DueDateForm, 'import-form': ImportForm, 'createTask': TaskUtils.createTask
-    },
-    data() {
+    `, components: {
+        'task-form': TaskForm,
+        'dueDate-form': DueDateForm,
+        'import-form': ImportForm,
+        'createTask': TaskUtils.createTask
+    }, data() {
         return {
             showForm: false,
             showDueDateForm: false,
@@ -136,18 +152,14 @@ const App = {
             showImportConfirm: false,
             importedTasksPreview: [],
         };
-    },
-    computed: {
+    }, computed: {
         completedCount() {
             return this.tasks.filter(t => t.completed).length;
-        },
-        totalCount() {
+        }, totalCount() {
             return this.tasks.length;
-        },
-        activeCount() {
+        }, activeCount() {
             return this.tasks.filter(t => !t.completed).length;
-        },
-        overdueCount() {
+        }, overdueCount() {
             const now = new Date();
             return this.tasks.filter(t => {
                 if (t.completed) return false;
@@ -157,13 +169,10 @@ const App = {
                 return d < now;
             }).length;
         },
-    },
-    methods: {
+    }, methods: {
         openForm() {
             this.showForm = true;
-        },
-
-        openDueDateForm(e) {
+        }, openDueDateForm(e) {
             const id = e.target.id;
             this.editingTaskId = id;
             this.showDueDateForm = true;
@@ -171,27 +180,20 @@ const App = {
             this.showImportForm = true;
         }, uid() {
             return Math.random().toString(36).slice(2) + Date.now().toString(36);
-        },
-
-        saveTasks() {
+        }, saveTasks() {
             localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
-        },
-
-        loadTasks() {
+        }, loadTasks() {
             try {
                 const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
                 return tasks.map(task => ({
                     completed: false,
-                    completedAt: null,
-                    ...task,
+                    completedAt: null, ...task,
                     dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
                 }));
             } catch {
                 return [];
             }
-        },
-
-        onCreate(payload) {
+        }, onCreate(payload) {
             const title = String(payload.title || '').trim();
             const description = String(payload.description || '').trim();
             let dueDate = String(payload.dueDate || '').trim();
@@ -214,27 +216,20 @@ const App = {
                 createdAt: new Date().toISOString()
             };
 
-            this.tasks = [task, ...this.tasks].sort(
-                (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-            );
+            this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
             this.showForm = false;
-        },
-        deleteTask(taskId) {
+        }, deleteTask(taskId) {
             // Remove the task with the given id
             this.tasks = this.tasks.filter(task => task.id !== taskId);
             this.saveTasks();
-        },
-
-        onCreateDueDateForm(payload) {
+        }, onCreateDueDateForm(payload) {
             const dueDate = String(payload.dueDate || '').trim();
             if (!dueDate || !this.editingTaskId) {
                 this.showDueDateForm = false;
                 return;
             }
-            this.tasks = this.tasks.map(task =>
-                task.id === this.editingTaskId ? {...task, dueDate} : task
-            );
+            this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? {...task, dueDate} : task);
             this.saveTasks();
             this.showDueDateForm = false;
             this.editingTaskId = null;
@@ -256,7 +251,8 @@ const App = {
                 try {
                     const importedTasks = JSON.parse(e.target.result);
                     if (Array.isArray(importedTasks)) {
-                        const sanitizedTasks = importedTasks.map(t => createTask(t)).filter(t => t.title);
+                        const sanitizedTasks = importedTasks.map(t => TaskUtils.createTask(t)).filter(t => t.title);
+                        console.log(sanitizedTasks);
                         if (sanitizedTasks.length) {
                             this.importedTasksPreview = sanitizedTasks;
                             this.showImportConfirm = true;

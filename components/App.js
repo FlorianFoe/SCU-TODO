@@ -183,7 +183,25 @@ const App = {
             this.showImportConfirm = false;
             this.importedTasksPreview = [];
         }, exportTasks() {
-            // TODO: Implement export functionality
+            if (this.tasks.length === 0) {
+                alert('No tasks to export.');
+                return;
+            }
+            const exportData = this.tasks.map(task => createTask(task));
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+
+            const currentDate = new Date().toISOString().split('T')[0];
+            const filename = `tasks-${currentDate}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

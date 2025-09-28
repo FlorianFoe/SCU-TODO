@@ -10,9 +10,25 @@ const App = {
           <div class="font-bold">To Do list Task Manager</div>
 
           <div class="ml-auto flex items-center gap-2">
+            <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600" 
+                    @click="openImportForm" 
+                    title="Import Tasks">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+            <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600" 
+                    @click="exportTasks" 
+                    title="Export Tasks">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </button>
             <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
-            <button class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold"
-                    @click="openImportForm">Import Tasks</button>
           </div>
         </div>
       </header>
@@ -273,6 +289,26 @@ const App = {
         }, cancelImport() {
             this.showImportConfirm = false;
             this.importedTasksPreview = [];
+        }, exportTasks() {
+            if (this.tasks.length === 0) {
+                alert('No tasks to export.');
+                return;
+            }
+            const exportData = this.tasks.map(task => createTask(task));
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+
+            const currentDate = new Date().toISOString().split('T')[0];
+            const filename = `tasks-${currentDate}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }, getDueDateBgClass(dueDate) {
             if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
             const dueDateObj = new Date(dueDate);

@@ -79,9 +79,17 @@ const App = {
 
         <!-- Task list -->
         <ul v-if="tasks.length" class="space-y-3">
-          <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
+          <li 
+              v-for="(t, i) in tasks" 
+              :key="t.id" 
+              class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow"  
+              draggable="true"
+              @dragstart="onDragStart(i)"
+              @dragover="onDragOver(i, $event)"
+              @drop="onDrop(i)"
+          >
             <div class="flex transition-transform duration-300">
-          
+            <span class="cursor-move px-2 py-4">&#x2630;</span>
             <!-- Row: checkbox + title + due badge -->
                 <div class="flex-1">
                     <div class="flex gap-3 items-start h-full mb-2 p-3">
@@ -93,16 +101,24 @@ const App = {
         
                       <!-- Todo content -->
                       <div class="flex-1 min-w-0">
-                        <div class="font-semibold flex justify-between items-center">
+                        <div class="font-semibold flex justify-between items-start">
                           <span :class="{'line-through text-slate-400': t.completed}">
                             {{ t.title }}
                           </span>
                           <!-- Due badge (unchanged logic) -->
+                          <div class="flex flex-col items-end gap-1">
                           <div v-if="true"
                                :id="t.id"
                                class="rounded-lg scale-[85%] w-fit px-1 font-normal text-white"
                                :class="getDueDateBgClass(t.dueDate)">
                                {{ getDueDateContent(t.dueDate) }}
+                          </div>
+                          <!-- Priority Selector and Marker -->
+                          <div class=" text-sm text-slate-400">Priority:
+                              <span :class="getPriorityBoxColour(t, n)" v-for="n in 5" :key="n" @click="setPriority(t, n)">
+                                  {{ n <= t.priority ? '\u25A0' : '\u25A1' }}
+                              </span>
+                          </div>
                           </div>
                         </div>
         
@@ -167,6 +183,7 @@ const App = {
             q: '',
             showImportConfirm: false,
             importedTasksPreview: [],
+            draggedIndex: null
         };
     }, computed: {
         completedCount() {
@@ -210,28 +227,8 @@ const App = {
                 return [];
             }
         }, onCreate(payload) {
-            const title = String(payload.title || '').trim();
-            const description = String(payload.description || '').trim();
-            let dueDate = String(payload.dueDate || '').trim();
-
-            if (dueDate !== '') {
-                const dueDate = new Date(payload.dueDate).toISOString();
-            } else if (!dueDate) {
-                dueDate = "No due date";
-            }
-
-            if (!title) return;
-
-            const task = {
-                id: this.uid(),
-                title,
-                description,
-                dueDate,
-                completed: false,
-                completedAt: null,
-                createdAt: new Date().toISOString()
-            };
-
+            const task = TaskUtils.createTask(payload);
+            if (!task.title) return;
             this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             this.saveTasks();
             this.showForm = false;
@@ -330,6 +327,47 @@ const App = {
             if (diffDays === 1) return 'Due tomorrow';
             if (diffDays <= 1) return 'Overdue';
             return `Due in ${diffDays} days`;
-        }
+        }, setPriority(t, n) {
+            t.priority = n;
+            this.saveTasks();
+        }, getPriorityBoxColour(t, n) {
+            console.log(t.priority)
+            const priorityColors = {
+                1: 'text-emerald-700',
+                2: 'text-green-600',
+                3: 'text-yellow-400',
+                4: 'text-orange-500',
+                5: 'text-red-700',
+            };
+
+            const hoverColors = {
+                1: 'hover:text-emerald-800',
+                2: 'hover:text-green-700',
+                3: 'hover:text-yellow-500',
+                4: 'hover:text-orange-600',
+                5: 'hover:text-red-800',
+            };
+
+            if (t.priority === undefined) {
+                return 'priority-box relative bottom-[2px] w-2.5 text-slate-300 cursor-pointer hover:text-slate-500';
+            }
+
+            const baseClass = 'priority-box relative w-2.5 bottom-[2px] cursor-pointer align-middle';
+            const isActive = n <= t.priority;
+            const colorClass = isActive ? priorityColors[n] : 'hover:' + priorityColors[n];
+            const hoverClass = isActive ? hoverColors[n] : '';
+
+            return `${baseClass} ${colorClass} ${hoverClass}`;
+        }, onDragStart(index) {
+            this.draggedIndex = index;
+        }, onDragOver(index, event) {
+            event.preventDefault();
+        }, onDrop(index) {
+            if (this.draggedIndex === null || this.draggedIndex === index) return;
+            const movedTask = this.tasks.splice(this.draggedIndex, 1)[0];
+            this.tasks.splice(index, 0, movedTask);
+            this.saveTasks();
+            this.draggedIndex = null;
+        },
     }
 };

@@ -82,14 +82,20 @@ const App = {
           <li v-for="t in tasks" :key="t.id" class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
             <div class="flex transition-transform duration-300">
           
-            <!-- Row: checkbox + title + due badge -->
+            <!-- Row: status drop down + title + due badge -->
                 <div class="flex-1">
                     <div class="flex gap-3 items-start h-full mb-2 p-3">
                       <!-- Check-off (existing feature) -->
-                      <input type="checkbox"
-                             class="mt-1 w-5 h-5"
-                             :checked="t.completed"
-                             @change="toggleComplete(t)" />
+                      <select
+                class="mt-0.5 text-sm rounded-md border px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                :value="t.status || (t.completed ? 'Completed' : 'To Do')"
+                @change="onStatusChange(t, $event.target.value)"
+                aria-label="Set task status"
+                >
+                <option>To Do</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+              </select>
         
                       <!-- Todo content -->
                       <div class="flex-1 min-w-0">
@@ -255,7 +261,17 @@ const App = {
             this.saveTasks();
             this.showDueDateForm = false;
             this.editingTaskId = null;
-        }, toggleComplete(t) {
+        },onStatusChange(t, status) {
+        t.status = status;
+        if (status === 'Completed') {
+          if (!t.completed) t.completedAt = new Date().toISOString();
+          t.completed = true;
+        } else {
+          t.completed = false;
+          t.completedAt = null;
+        }
+        this.saveTasks();
+      }, toggleComplete(t) {
             t.completed = !t.completed;
             t.completedAt = t.completed ? new Date().toISOString() : null;
             this.saveTasks();

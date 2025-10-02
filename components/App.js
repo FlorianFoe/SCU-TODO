@@ -199,17 +199,23 @@ const App = {
         }, saveTasks() {
             localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
         }, loadTasks() {
-            try {
-                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
-                return tasks.map(task => ({
-                    completed: false,
-                    completedAt: null, ...task,
-                    dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
-                }));
-            } catch {
-                return [];
-            }
-        }, onCreate(payload) {
+        try {
+          const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+          return tasks.map(task => {
+            const t = {
+              completed: false,
+              completedAt: null,
+              status: 'To Do',
+              ...task,
+              dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
+            };
+            if (!('status' in task)) t.status = t.completed ? 'Completed' : 'To Do';
+            return t;
+          });
+        } catch {
+          return [];
+        }
+      }, onCreate(payload) {
             const title = String(payload.title || '').trim();
             const description = String(payload.description || '').trim();
             let dueDate = String(payload.dueDate || '').trim();

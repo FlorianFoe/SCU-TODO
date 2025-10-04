@@ -197,7 +197,7 @@ const App = {
                     class="flex-1 bg-blue-500 hover:bg-blue-600 flex items-center justify-center cursor-pointer transition-all duration-300"
                     @click="openEditForm(t)"
                     :data-task-id="t.id"
-                    title="Edit Item"
+                    title="Edit Task"
                   >
                   <span class="text-white text-xl font-bold whitespace-nowrap">✎</span>
                 </div>

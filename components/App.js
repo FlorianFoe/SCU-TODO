@@ -1,5 +1,5 @@
 const App = {
-  template: `
+    template: `
     <div>
       <!-- Sticky top header -->
       <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b">
@@ -39,23 +39,11 @@ const App = {
 
       <main class="container mx-auto px-4 py-8 max-w-2xl">
         <!-- Modals -->
-        <task-form
-          v-if="showForm"
-          @close="showForm=false"
-          @create="onCreate"
-        ></task-form>
+        <task-form v-if="showForm" @close="showForm=false" @create="onCreate"></task-form>
 
-        <dueDate-form
-          v-if="showDueDateForm"
-          @close="showDueDateForm=false"
-          @create="onCreateDueDateForm"
-        ></dueDate-form>
+        <dueDate-form v-if="showDueDateForm" @close="showDueDateForm=false" @create="onCreateDueDateForm"></dueDate-form>
 
-        <import-form
-          v-if="showImportForm"
-          @close="showImportForm=false"
-          @import="onImport"
-        ></import-form>
+        <import-form v-if="showImportForm" @close="showImportForm=false" @import="onImport"></import-form>
 
         <!-- Stats + Clear Completed -->
         <div class="flex items-center justify-between mb-4" role="status" aria-live="polite">
@@ -78,11 +66,7 @@ const App = {
             </span>
           </div>
 
-          <button
-            v-if="completedCount"
-            class="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition"
-            @click="clearCompleted"
-          >
+          <button v-if="completedCount" class="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition" @click="clearCompleted">
             Clear completed ({{ completedCount }})
           </button>
         </div>
@@ -90,28 +74,33 @@ const App = {
         <!-- Task list -->
         <ul v-if="tasks.length" class="space-y-3">
           <li
-            v-for="t in tasks"
+            v-for="(t, i) in tasks"
             :key="t.id"
             class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow"
+            draggable="true"
+            @dragstart="onDragStart(i)"
+            @dragover="onDragOver(i, $event)"
+            @drop="onDrop(i)"
           >
             <div class="flex transition-transform duration-300">
-              <!-- Row: status drop down + title + due badge -->
+              <span class="cursor-move px-2 py-4">&#x2630;</span>
+              <!-- Row: checkbox + title + badges -->
               <div class="flex-1">
                 <div class="flex gap-3 items-start h-full mb-2 p-3">
-                  <!-- Middle: Title & Description (no left selector anymore) -->
-                  <div class="flex-1 min-w-0">
-                    <!-- Title row with right-side badges: status (top) + due (beneath) -->
-                    <div class="flex justify-between items-start">
-                      <div class="font-semibold" :class="{'line-through text-slate-400': t.completed}">
-                        {{ t.title }}
-                      </div>
+                  <!-- Check-off -->
+                  <input type="checkbox" class="mt-1 w-5 h-5" :checked="t.completed" @change="toggleComplete(t)" />
 
-                      <!-- RIGHT: status selector (badge) + due badge below -->
+                  <!-- Content -->
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold flex justify-between items-start">
+                      <span :class="{'line-through text-slate-400': t.completed}">{{ t.title }}</span>
+
+                      <!-- RIGHT: status selector + due badge -->
                       <div class="ml-3 flex flex-col items-end gap-1 min-w-[160px] relative" @click.stop>
-                        <!-- Status badge acts as selector -->
+                        <!-- Status badge (dropdown trigger) -->
                         <button
                           class="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium text-white shadow-sm"
-                          :class="statusBadgeClass(t.status)"
+                          :class="statusBadgeClass(t.status || (t.completed ? 'Completed' : 'To Do'))"
                           :aria-expanded="statusMenuFor===t.id"
                           aria-haspopup="listbox"
                           @click="toggleStatusMenu(t)"
@@ -122,45 +111,31 @@ const App = {
                         </button>
 
                         <!-- Status menu -->
-                        <div
-                          v-if="statusMenuFor===t.id"
-                          class="absolute right-0 top-6 z-20 w-32 sm:w-40 bg-white border rounded-md shadow-md p-1 text-xs max-h-40 overflow-auto"
-                          role="listbox"
-                          @keydown.esc="closeStatusMenu"
-                        >
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'To Do')"
-                            role="option"
-                          >
+                        <div v-if="statusMenuFor===t.id" class="absolute right-0 top-6 z-20 w-32 sm:w-40 bg-white border rounded-md shadow-md p-1 text-xs max-h-40 overflow-auto" role="listbox" @keydown.esc="closeStatusMenu">
+                          <button class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100" @click="chooseStatus(t, 'To Do')" role="option">
                             <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
                             <span class="text-slate-700">To Do</span>
                           </button>
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'In Progress')"
-                            role="option"
-                          >
+                          <button class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100" @click="chooseStatus(t, 'In Progress')" role="option">
                             <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
                             <span class="text-blue-700">In Progress</span>
                           </button>
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'Completed')"
-                            role="option"
-                          >
+                          <button class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100" @click="chooseStatus(t, 'Completed')" role="option">
                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
                             <span class="text-emerald-700">Completed</span>
                           </button>
                         </div>
 
-                        <!-- Due-date badge (beneath status) – same side as your original due badge -->
-                        <div
-                          :id="t.id"
-                          class="rounded-lg w-fit px-2 py-0.5 text-xs font-medium text-white"
-                          :class="getDueDateBgClass(t.dueDate)"
-                        >
+                        <!-- Due badge -->
+                        <div :id="t.id" class="rounded-lg w-fit px-2 py-0.5 text-xs font-medium text-white" :class="getDueDateBgClass(t.dueDate)">
                           {{ getDueDateContent(t.dueDate) }}
+                        </div>
+
+                        <!-- Priority Selector and Marker -->
+                        <div class="text-sm text-slate-400">Priority:
+                          <span :class="getPriorityBoxColour(t, n)" v-for="n in 5" :key="n" @click="setPriority(t, n)">
+                            {{ n <= (t.priority || 0) ? '\u25A0' : '\u25A1' }}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -170,25 +145,15 @@ const App = {
                       {{ t.description }}
                     </div>
 
-                    <!-- Raw due date + edit button (unchanged) -->
+                    <!-- Raw due date + edit button -->
                     <div class="flex gap-4 items-center mt-2">
                       <span>{{ t.dueDate }}</span>
-                      <div
-                        @click="openDueDateForm"
-                        :id="t.id"
-                        class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer"
-                      >
-                        ✎
-                      </div>
+                      <div @click="openDueDateForm" :id="t.id" class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer">✎</div>
                     </div>
                   </div>
 
                   <!-- Import confirmation dialog -->
-                  <div
-                    title="Import Confirmation Dialog"
-                    v-if="showImportConfirm"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-                  >
+                  <div title="Import Confirmation Dialog" v-if="showImportConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                     <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
                       <h2 class="text-lg font-bold mb-2">Import Tasks</h2>
                       <p class="mb-3">You are about to import the following tasks:</p>
@@ -205,11 +170,7 @@ const App = {
               </div>
 
               <!-- Delete button -->
-              <div
-                class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
-                @click="deleteTask(t.id)"
-                title="Delete Task"
-              >
+              <div class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden" @click="deleteTask(t.id)" title="Delete Task">
                 <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
               </div>
             </div>
@@ -219,267 +180,232 @@ const App = {
         <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
       </main>
     </div>
-    `,
-  components: {
-    'task-form': TaskForm,
-    'dueDate-form': DueDateForm,
-    'import-form': ImportForm,
-    'createTask': TaskUtils.createTask,
+  `,
+    components: {
+        'task-form': TaskForm,
+        'dueDate-form': DueDateForm,
+        'import-form': ImportForm,
+    },
+    data() {
+        return {
+            showForm: false,
+            showDueDateForm: false,
+            showImportForm: false,
+            tasks: this.loadTasks(),
+            editingTaskId: null,
+            q: '',
+            showImportConfirm: false,
+            importedTasksPreview: [],
+            statusMenuFor: null,
+            draggedIndex: null,
+        };
+    },
+    computed: {
+        completedCount() { return this.tasks.filter(t => t.completed).length; },
+        totalCount() { return this.tasks.length; },
+        activeCount() { return this.tasks.filter(t => !t.completed).length; },
+        overdueCount() {
+            const now = new Date();
+            return this.tasks.filter(t => {
+                if (t.completed) return false;
+                if (!t.dueDate || t.dueDate === 'No due date') return false;
+                const d = new Date(t.dueDate);
+                if (isNaN(d.getTime())) return false;
+                return d < now;
+            }).length;
+        },
+    },
     mounted() {
-      this._onOutsideClick = () => { this.statusMenuFor = null; };
-      document.addEventListener('click', this._onOutsideClick);
+        // Close status menu on outside click
+        this._onOutsideClick = (e) => {
+            if (!this.$el.contains(e.target)) this.statusMenuFor = null;
+        };
+        document.addEventListener('click', this._onOutsideClick);
     },
     beforeUnmount() {
-      document.removeEventListener('click', this._onOutsideClick);
+        document.removeEventListener('click', this._onOutsideClick);
     },
-  },
-  data() {
-    return {
-      showForm: false,
-      showDueDateForm: false,
-      showImportForm: false,
-      tasks: this.loadTasks(),
-      editingTaskId: null,
-      q: '',
-      showImportConfirm: false,
-      importedTasksPreview: [],
-      statusMenuFor: null,
-    };
-  },
-  computed: {
-    completedCount() {
-      return this.tasks.filter(t => t.completed).length;
-    },
-    totalCount() {
-      return this.tasks.length;
-    },
-    activeCount() {
-      return this.tasks.filter(t => !t.completed).length;
-    },
-    overdueCount() {
-      const now = new Date();
-      return this.tasks.filter(t => {
-        if (t.completed) return false;
-        if (!t.dueDate || t.dueDate === 'No due date') return false;
-        const d = new Date(t.dueDate);
-        if (isNaN(d.getTime())) return false;
-        return d < now;
-      }).length;
-    },
-  },
-  methods: {
-    openForm() {
-      this.showForm = true;
-    },
-    openDueDateForm(e) {
-      const id = e.target.id;
-      this.editingTaskId = id;
-      this.showDueDateForm = true;
-    },
-    openImportForm() {
-      this.showImportForm = true;
-    },
-    uid() {
-      return Math.random().toString(36).slice(2) + Date.now().toString(36);
-    },
-    saveTasks() {
-      localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
-    },
-    loadTasks() {
-      try {
-        const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
-        return tasks.map(task => {
-          const t = {
-            completed: false,
-            completedAt: null,
-            status: 'To Do',
-            ...task,
-            dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
-          };
-          if (!('status' in task)) t.status = t.completed ? 'Completed' : 'To Do';
-          return t;
-        });
-      } catch {
-        return [];
-      }
-    },
-    onCreate(payload) {
-      const title = String(payload.title || '').trim();
-      const description = String(payload.description || '').trim();
-      let dueDate = String(payload.dueDate || '').trim();
+    methods: {
+        openForm() { this.showForm = true; },
+        openDueDateForm(e) {
+            const id = e.target.id;
+            this.editingTaskId = id;
+            this.showDueDateForm = true;
+        },
+        openImportForm() { this.showImportForm = true; },
+        uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); },
+        saveTasks() { localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks)); },
+        loadTasks() {
+            try {
+                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                return tasks.map(task => {
+                    const t = {
+                        completed: false,
+                        completedAt: null,
+                        status: 'To Do',
+                        priority: 0,
+                        ...task,
+                        dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate,
+                    };
+                    if (!('status' in task)) t.status = t.completed ? 'Completed' : 'To Do';
+                    if (typeof t.priority !== 'number') t.priority = 0;
+                    return t;
+                });
+            } catch { return []; }
+        },
+        onCreate(payload) {
+            // Prefer shared util to keep schema consistent
+            const task = TaskUtils.createTask(payload);
+            if (!task || !task.title) return;
 
-      if (dueDate !== '') {
-        const dueDate = new Date(payload.dueDate).toISOString();
-      } else if (!dueDate) {
-        dueDate = "No due date";
-      }
+            // Ensure defaults + derived fields
+            task.id = task.id || this.uid();
+            task.completed = !!task.completed;
+            task.completedAt = task.completed ? (task.completedAt || new Date().toISOString()) : null;
+            task.createdAt = task.createdAt || new Date().toISOString();
+            task.dueDate = task.dueDate ? String(task.dueDate) : 'No due date';
+            task.priority = typeof task.priority === 'number' ? task.priority : 0;
+            task.status = task.status || (task.completed ? 'Completed' : 'To Do');
 
-      if (!title) return;
-
-      const task = {
-        id: this.uid(),
-        title,
-        description,
-        dueDate,
-        completed: false,
-        completedAt: null,
-        createdAt: new Date().toISOString()
-      };
-
-      this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      this.saveTasks();
-      this.showForm = false;
-    },
-    deleteTask(taskId) {
-      // Remove the task with the given id
-      this.tasks = this.tasks.filter(task => task.id !== taskId);
-      this.saveTasks();
-    },
-    onCreateDueDateForm(payload) {
-      const dueDate = String(payload.dueDate || '').trim();
-      if (!dueDate || !this.editingTaskId) {
-        this.showDueDateForm = false;
-        return;
-      }
-      this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? { ...task, dueDate } : task);
-      this.saveTasks();
-      this.showDueDateForm = false;
-      this.editingTaskId = null;
-    },
-    onStatusChange(t, status) {
-      t.status = status;
-      if (status === 'Completed') {
-        if (!t.completed) t.completedAt = new Date().toISOString();
-        t.completed = true;
-      } else {
-        t.completed = false;
-        t.completedAt = null;
-      }
-      this.saveTasks();
-    },
-    statusClass(s) {
-      switch (s) {
-        case 'Completed':
-          return 'bg-emerald-600 text-white border-emerald-700 focus:ring-emerald-300';
-        case 'In Progress':
-          return 'bg-blue-600 text-white border-blue-700 focus:ring-blue-300';
-        default: // 'To Do'
-          return 'bg-slate-600 text-white border-slate-700 focus:ring-slate-300';
-      }
-    },
-    toggleStatusMenu(task) {
-      this.statusMenuFor = (this.statusMenuFor === task.id) ? null : task.id;
-    },
-    closeStatusMenu() {
-      this.statusMenuFor = null;
-    },
-    chooseStatus(t, status) {
-      t.status = status;
-      if (status === 'Completed') {
-        if (!t.completed) t.completedAt = new Date().toISOString();
-        t.completed = true;
-      } else {
-        t.completed = false;
-        t.completedAt = null;
-      }
-      this.saveTasks();
-      this.closeStatusMenu();
-    },
-    statusBadgeClass(s) {
-      switch (s) {
-        case 'Completed':   return 'bg-emerald-600';
-        case 'In Progress': return 'bg-blue-600';
-        default:            return 'bg-slate-600'; // 'To Do'
-      }
-    },
-    toggleComplete(t) {
-      t.completed = !t.completed;
-      t.completedAt = t.completed ? new Date().toISOString() : null;
-      this.saveTasks();
-    },
-    clearCompleted() {
-      if (!this.completedCount) return;
-      if (!confirm('Remove all completed tasks?')) return;
-      this.tasks = this.tasks.filter(t => !t.completed);
-      this.saveTasks();
-    },
-    onImport(payload) {
-      const file = payload.tasksFile;
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const importedTasks = JSON.parse(e.target.result);
-          if (Array.isArray(importedTasks)) {
-            const sanitizedTasks = importedTasks.map(t => TaskUtils.createTask(t)).filter(t => t.title);
-            console.log(sanitizedTasks);
-            if (sanitizedTasks.length) {
-              this.importedTasksPreview = sanitizedTasks;
-              this.showImportConfirm = true;
+            this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            this.saveTasks();
+            this.showForm = false;
+        },
+        deleteTask(taskId) {
+            this.tasks = this.tasks.filter(task => task.id !== taskId);
+            this.saveTasks();
+        },
+        onCreateDueDateForm(payload) {
+            const dueDate = String(payload.dueDate || '').trim();
+            if (!dueDate || !this.editingTaskId) { this.showDueDateForm = false; return; }
+            this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? { ...task, dueDate } : task);
+            this.saveTasks();
+            this.showDueDateForm = false;
+            this.editingTaskId = null;
+        },
+        toggleComplete(t) {
+            t.completed = !t.completed;
+            t.completedAt = t.completed ? new Date().toISOString() : null;
+            // Keep status in sync
+            t.status = t.completed ? 'Completed' : (t.status === 'Completed' ? 'To Do' : t.status || 'To Do');
+            this.saveTasks();
+        },
+        clearCompleted() {
+            if (!this.completedCount) return;
+            if (!confirm('Remove all completed tasks?')) return;
+            this.tasks = this.tasks.filter(t => !t.completed);
+            this.saveTasks();
+        },
+        // Status dropdown helpers
+        toggleStatusMenu(task) {
+            this.statusMenuFor = (this.statusMenuFor === task.id) ? null : task.id;
+        },
+        closeStatusMenu() { this.statusMenuFor = null; },
+        chooseStatus(t, status) {
+            t.status = status;
+            if (status === 'Completed') {
+                if (!t.completed) t.completedAt = new Date().toISOString();
+                t.completed = true;
+            } else {
+                t.completed = false;
+                t.completedAt = null;
             }
-          } else {
-            alert('Imported file must contain an array of tasks.');
-          }
-        } catch {
-          alert('Failed to import tasks. Please ensure the file is a valid JSON.');
-        }
-      };
-      reader.readAsText(file);
-    },
-    confirmImport() {
-      this.tasks = [...this.importedTasksPreview, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      this.showImportConfirm = false;
-      this.importedTasksPreview = [];
-      this.saveTasks();
-    },
-    cancelImport() {
-      this.showImportConfirm = false;
-      this.importedTasksPreview = [];
-    },
-    exportTasks() {
-      if (this.tasks.length === 0) {
-        alert('No tasks to export.');
-        return;
-      }
-      const exportData = this.tasks.map(task => createTask(task));
-      const jsonString = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const currentDate = new Date().toISOString().split('T')[0];
-      const filename = `tasks-${currentDate}.json`;
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    },
-    getDueDateBgClass(dueDate) {
-      if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
-      const dueDateObj = new Date(dueDate);
-      const now = new Date();
-      const diffTime = dueDateObj - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return 'bg-red-600';
-      if (diffDays === 1) return 'bg-orange-500';
-      if (diffDays <= 3 && diffDays >= 1) return 'bg-yellow-400';
-      if (diffDays > 3) return 'bg-green-600';
-      if (diffDays <= 1) return 'bg-black';
-    },
-    getDueDateContent(dueDate) {
-      if (!dueDate || dueDate === "No due date") return 'No due date';
-      const dueDateObj = new Date(dueDate);
-      const now = new Date();
-      const diffTime = dueDateObj - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return 'Due today';
-      if (diffDays === 1) return 'Due tomorrow';
-      if (diffDays <= 1) return 'Overdue';
-      return `Due in ${diffDays} days`;
+            this.saveTasks();
+            this.closeStatusMenu();
+        },
+        statusBadgeClass(s) {
+            switch (s) {
+                case 'Completed':   return 'bg-emerald-600';
+                case 'In Progress': return 'bg-blue-600';
+                default:            return 'bg-slate-600'; // 'To Do'
+            }
+        },
+        // Import / export
+        onImport(payload) {
+            const file = payload.tasksFile; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedTasks = JSON.parse(e.target.result);
+                    if (Array.isArray(importedTasks)) {
+                        const sanitizedTasks = importedTasks
+                            .map(t => TaskUtils.createTask(t))
+                            .filter(t => t && t.title)
+                            .map(t => ({
+                                // normalize to our schema
+                                id: t.id || this.uid(),
+                                title: t.title,
+                                description: t.description || '',
+                                dueDate: t.dueDate ? String(t.dueDate) : 'No due date',
+                                completed: !!t.completed,
+                                completedAt: t.completed ? (t.completedAt || new Date().toISOString()) : null,
+                                createdAt: t.createdAt || new Date().toISOString(),
+                                status: t.status || (t.completed ? 'Completed' : 'To Do'),
+                                priority: typeof t.priority === 'number' ? t.priority : 0,
+                            }));
+                        if (sanitizedTasks.length) {
+                            this.importedTasksPreview = sanitizedTasks;
+                            this.showImportConfirm = true;
+                        }
+                    } else { alert('Imported file must contain an array of tasks.'); }
+                } catch { alert('Failed to import tasks. Please ensure the file is a valid JSON.'); }
+            };
+            reader.readAsText(file);
+        },
+        confirmImport() {
+            this.tasks = [...this.importedTasksPreview, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            this.showImportConfirm = false; this.importedTasksPreview = []; this.saveTasks();
+        },
+        cancelImport() { this.showImportConfirm = false; this.importedTasksPreview = []; },
+        exportTasks() {
+            if (this.tasks.length === 0) { alert('No tasks to export.'); return; }
+            const exportData = this.tasks.map(task => TaskUtils.createTask(task));
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const currentDate = new Date().toISOString().split('T')[0];
+            const filename = `tasks-${currentDate}.json`;
+            const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        },
+        // Due date helpers
+        getDueDateBgClass(dueDate) {
+            if (!dueDate || dueDate === 'No due date') return 'bg-gray-400';
+            const dueDateObj = new Date(dueDate); const now = new Date();
+            const diffTime = dueDateObj - now; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return 'bg-red-600';
+            if (diffDays === 1) return 'bg-orange-500';
+            if (diffDays <= 3 && diffDays >= 1) return 'bg-yellow-400';
+            if (diffDays > 3) return 'bg-green-600';
+            if (diffDays <= 1) return 'bg-black';
+        },
+        getDueDateContent(dueDate) {
+            if (!dueDate || dueDate === 'No due date') return 'No due date';
+            const dueDateObj = new Date(dueDate); const now = new Date();
+            const diffTime = dueDateObj - now; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return 'Due today';
+            if (diffDays === 1) return 'Due tomorrow';
+            if (diffDays <= 1) return 'Overdue';
+            return `Due in ${diffDays} days`;
+        },
+        setPriority(t, n) { t.priority = n; this.saveTasks(); },
+        getPriorityBoxColour(t, n) {
+            const priorityColors = { 1: 'text-emerald-700', 2: 'text-green-600', 3: 'text-yellow-400', 4: 'text-orange-500', 5: 'text-red-700' };
+            const hoverColors = { 1: 'hover:text-emerald-800', 2: 'hover:text-green-700', 3: 'hover:text-yellow-500', 4: 'hover:text-orange-600', 5: 'hover:text-red-800' };
+            if (t.priority === undefined) return 'priority-box relative bottom-[2px] w-2.5 text-slate-300 cursor-pointer hover:text-slate-500';
+            const baseClass = 'priority-box relative w-2.5 bottom-[2px] cursor-pointer align-middle';
+            const isActive = n <= (t.priority || 0);
+            const colorClass = isActive ? priorityColors[n] : 'hover:' + priorityColors[n];
+            const hoverClass = isActive ? hoverColors[n] : '';
+            return `${baseClass} ${colorClass} ${hoverClass}`;
+        },
+        onDragStart(index) { this.draggedIndex = index; },
+        onDragOver(index, event) { event.preventDefault(); },
+        onDrop(index) {
+            if (this.draggedIndex === null || this.draggedIndex === index) return;
+            const movedTask = this.tasks.splice(this.draggedIndex, 1)[0];
+            this.tasks.splice(index, 0, movedTask);
+            this.saveTasks();
+            this.draggedIndex = null;
+        },
     }
-  }
 };

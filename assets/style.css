@@ -2,6 +2,19 @@
 body {
     font-family: 'Inter', sans-serif;
 }
+
+.priority-box {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    transition: transform 0.2s;
+    transform-origin: center;
+    height: fit-content;
+}
+
+.priority-box:hover {
+    transform: scale(1.4);
+}
 .status-select {
   border-radius: 0.5rem; /* matches rounded-lg */
 }

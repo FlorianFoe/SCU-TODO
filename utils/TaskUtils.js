@@ -1,9 +1,10 @@
-function createTask({ id, title, dueDate, description, createdAt }) {
+function createTask({ id, title, dueDate, description, priority, createdAt }) {
     return {
         id: id || generateUid(),
         title: String(title || '').trim(),
-        dueDate: typeof dueDate === 'undefined' ? 'No due date' : String(dueDate).trim(),
+        dueDate: typeof dueDate === 'undefined' || 'NaN' ? 'No due date' : String(dueDate).trim(),
         description: String(description || '').trim(),
+        priority: Number(priority) || 1,
         createdAt: createdAt || new Date().toISOString()
     };
 }

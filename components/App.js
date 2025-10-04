@@ -45,11 +45,12 @@ const App = {
           @create="onCreate"
         ></task-form>
 
-        <dueDate-form
-          v-if="showDueDateForm"
-          @close="showDueDateForm=false"
-          @create="onCreateDueDateForm"
-        ></dueDate-form>
+        <edit-task-form
+          v-if="showEditForm"
+          :task="editingTask"
+          @close="showEditForm=false"
+          @save="onEditTask"
+        ></edit-task-form>
 
         <import-form
           v-if="showImportForm"
@@ -199,7 +200,7 @@ const App = {
               <div class="w-0 group-hover:w-16 overflow-hidden flex flex-col self-stretch transition-all duration-300">
                 <div
                     class="flex-1 bg-blue-500 hover:bg-blue-600 flex items-center justify-center cursor-pointer transition-all duration-300"
-                    @click="openDueDateForm"
+                    @click="openEditForm(t)"
                     :data-task-id="t.id"
                     title="Edit Item"
                   >
@@ -222,7 +223,7 @@ const App = {
     `,
   components: {
     'task-form': TaskForm,
-    'dueDate-form': DueDateForm,
+    'edit-task-form': EditTaskForm,
     'import-form': ImportForm,
     'createTask': TaskUtils.createTask,
     mounted() {
@@ -236,10 +237,11 @@ const App = {
   data() {
     return {
       showForm: false,
-      showDueDateForm: false,
+      showEditForm: false,
       showImportForm: false,
       tasks: this.loadTasks(),
       editingTaskId: null,
+      editingTask: null,
       q: '',
       showImportConfirm: false,
       importedTasksPreview: [],
@@ -271,10 +273,9 @@ const App = {
     openForm() {
       this.showForm = true;
     },
-    openDueDateForm(e) {
-      const id = e.target.closest('[data-task-id]').getAttribute('data-task-id');
-      this.editingTaskId = id;
-      this.showDueDateForm = true;
+    openEditForm(task) {
+      this.editingTask = { ...task };
+      this.showEditForm = true;
     },
     openImportForm() {
       this.showImportForm = true;
@@ -335,16 +336,11 @@ const App = {
       this.tasks = this.tasks.filter(task => task.id !== taskId);
       this.saveTasks();
     },
-    onCreateDueDateForm(payload) {
-      const dueDate = String(payload.dueDate || '').trim();
-      if (!dueDate || !this.editingTaskId) {
-        this.showDueDateForm = false;
-        return;
-      }
-      this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? { ...task, dueDate } : task);
+    onEditTask(updatedTask) {
+      this.tasks = this.tasks.map(task => task.id === updatedTask.id ? { ...task, ...updatedTask } : task);
       this.saveTasks();
-      this.showDueDateForm = false;
-      this.editingTaskId = null;
+      this.showEditForm = false;
+      this.editingTask = null;
     },
     onStatusChange(t, status) {
       t.status = status;

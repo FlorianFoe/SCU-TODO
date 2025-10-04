@@ -93,7 +93,7 @@ const App = {
           <li
             v-for="t in tasks"
             :key="t.id"
-            class="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition-shadow"
+            class="bg-white border rounded-xl group hover:shadow-md transition-shadow"
           >
             <div class="flex transition-transform duration-300">
               <!-- Row: status drop down + title + due badge -->
@@ -101,69 +101,67 @@ const App = {
                 <div class="flex gap-3 items-start h-full mb-2 p-3">
                   <!-- Middle: Title & Description (no left selector anymore) -->
                   <div class="flex-1 min-w-0">
-                    <!-- Title row with right-side badges: status (top) + due (beneath) -->
-                    <div class="flex justify-between items-start">
-                      <div class="font-semibold" :class="{'line-through text-slate-400': t.completed}">
-                        {{ t.title }}
-                      </div>
-
-                      <!-- RIGHT: status selector (badge) + due badge below -->
-                      <div class="ml-3 flex flex-col items-end gap-1 min-w-[160px] relative" @click.stop>
+                    <div class="text-lg font-semibold" :class="{'line-through text-slate-400': t.completed}">
+                      {{ t.title }}
+                    </div>
+                    <div class="mt-2 mb-3 flex gap-1 min-w-[160px]">
                         <!-- Status badge acts as selector -->
-                        <button
-                          class="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium text-white shadow-sm"
-                          :class="statusBadgeClass(t.status)"
-                          :aria-expanded="statusMenuFor===t.id"
-                          aria-haspopup="listbox"
-                          @click="toggleStatusMenu(t)"
-                          title="Change status"
-                        >
-                          {{ t.status || (t.completed ? 'Completed' : 'To Do') }}
-                          <span class="ml-1 text-white/80">▼</span>
-                        </button>
+                        <div class="relative" @click.stop>
+                          <button
+                            class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-white shadow-sm"
+                            :class="statusBadgeClass(t.status)"
+                            :aria-expanded="statusMenuFor===t.id"
+                            aria-haspopup="listbox"
+                            @click="toggleStatusMenu(t)"
+                            title="Change status"
+                          >
+                            {{ t.status || (t.completed ? 'Completed' : 'To Do') }}
+                            <span class="ml-1 text-white/80">▼</span>
+                          </button>
 
-                        <!-- Status menu -->
-                        <div
-                          v-if="statusMenuFor===t.id"
-                          class="absolute right-0 top-6 z-20 w-32 sm:w-40 bg-white border rounded-md shadow-md p-1 text-xs max-h-40 overflow-auto"
-                          role="listbox"
-                          @keydown.esc="closeStatusMenu"
-                        >
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'To Do')"
-                            role="option"
+                          <!-- Status menu -->
+                          <div
+                            v-if="statusMenuFor===t.id"
+                            class="absolute left-0 top-full mt-1 z-20 w-32 sm:w-40 bg-white border rounded-md shadow-md p-1 text-xs max-h-40 overflow-auto"
+                            role="listbox"
+                            @keydown.esc="closeStatusMenu"
                           >
-                            <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
-                            <span class="text-slate-700">To Do</span>
-                          </button>
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'In Progress')"
-                            role="option"
-                          >
-                            <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
-                            <span class="text-blue-700">In Progress</span>
-                          </button>
-                          <button
-                            class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
-                            @click="chooseStatus(t, 'Completed')"
-                            role="option"
-                          >
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
-                            <span class="text-emerald-700">Completed</span>
-                          </button>
+                            <button
+                              class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
+                              @click="chooseStatus(t, 'To Do')"
+                              role="option"
+                            >
+                              <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
+                              <span class="text-slate-700">To Do</span>
+                            </button>
+                            <button
+                              class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
+                              @click="chooseStatus(t, 'In Progress')"
+                              role="option"
+                            >
+                              <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                              <span class="text-blue-700">In Progress</span>
+                            </button>
+                            <button
+                              class="w-full flex items-center gap-1.5 rounded px-2 py-1 hover:bg-slate-100"
+                              @click="chooseStatus(t, 'Completed')"
+                              role="option"
+                            >
+                              <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+                              <span class="text-emerald-700">Completed</span>
+                            </button>
+                          </div>
                         </div>
-
-                        <!-- Due-date badge (beneath status) – same side as your original due badge -->
+    
+                        <!-- Due-date badge -->
                         <div
+                          v-if="t.dueDate && t.dueDate !== 'No due date'"
                           :id="t.id"
-                          class="rounded-lg w-fit px-2 py-0.5 text-xs font-medium text-white"
+                          class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-white shadow-sm"
                           :class="getDueDateBgClass(t.dueDate)"
                         >
                           {{ getDueDateContent(t.dueDate) }}
                         </div>
-                      </div>
                     </div>
 
                     <!-- Description -->
@@ -171,9 +169,6 @@ const App = {
                       {{ t.description }}
                     </div>
 
-                    <div class="flex gap-4 items-center mt-2">
-                      <span>{{ t.dueDate }}</span>
-                    </div>
                   </div>
 
                   <!-- Import confirmation dialog -->
@@ -197,7 +192,7 @@ const App = {
                 </div>
               </div>
 
-              <div class="w-0 group-hover:w-16 overflow-hidden flex flex-col self-stretch transition-all duration-300">
+              <div class="w-0 group-hover:w-16 overflow-hidden rounded-r-xl flex flex-col self-stretch transition-all duration-300">
                 <div
                     class="flex-1 bg-blue-500 hover:bg-blue-600 flex items-center justify-center cursor-pointer transition-all duration-300"
                     @click="openEditForm(t)"
@@ -463,7 +458,7 @@ const App = {
       if (diffDays === 0) return 'bg-red-600';
       if (diffDays === 1) return 'bg-orange-500';
       if (diffDays <= 3 && diffDays >= 1) return 'bg-yellow-400';
-      if (diffDays > 3) return 'bg-green-600';
+      if (diffDays > 3) return 'bg-blue-600';
       if (diffDays <= 1) return 'bg-black';
     },
     getDueDateContent(dueDate) {

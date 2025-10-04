@@ -1,5 +1,5 @@
 const App = {
-  template: `
+    template: `
     <div>
       <!-- Sticky top header -->
       <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b">
@@ -184,26 +184,10 @@ const App = {
                   </div>
 
                   <!-- Import confirmation dialog -->
-                  <div
-                    title="Import Confirmation Dialog"
-                    v-if="showImportConfirm"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-                  >
-                    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-                      <h2 class="text-lg font-bold mb-2">Import Tasks</h2>
-                      <p class="mb-3">You are about to import the following tasks:</p>
-                      <ul class="mb-4 max-h-40 overflow-y-auto">
-                        <li v-for="t in importedTasksPreview" :key="t.id" class="text-gray-700">• {{ t.title }}</li>
-                      </ul>
-                      <div class="flex justify-end gap-2">
-                        <button @click="cancelImport" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
-                        <button @click="confirmImport" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Confirm</button>
-                      </div>
-                    </div>
-                  </div>
+                 
                 </div>
               </div>
-
+                
               <!-- Delete button -->
               <div
                 class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
@@ -215,271 +199,275 @@ const App = {
             </div>
           </li>
         </ul>
-
+         <div
+                    v-if="showImportConfirm"
+                    title="Import Confirmation Dialog"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+                  >
+                   
+              
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+           <h2 class="text-lg font-bold mb-2">Import Tasks</h2>
+           <p class="mb-3">You are about to import the following tasks:</p>
+           <ul class="mb-4 max-h-40 overflow-y-auto">
+              <li v-for="t in importedTasksPreview" :key="t.id" class="text-gray-700">• {{ t.title }}</li>
+           </ul>
+           <div class="flex justify-end gap-2">
+              <button @click="cancelImport" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+              <button @click="confirmImport" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Confirm</button>
+           </div>
+        </div>
+         </div>
         <p v-else class="text-gray-500 text-center">No tasks yet. Click “New Task”.</p>
+     
       </main>
     </div>
-    `,
-  components: {
-    'task-form': TaskForm,
-    'dueDate-form': DueDateForm,
-    'import-form': ImportForm,
-    'createTask': TaskUtils.createTask,
-    mounted() {
-      this._onOutsideClick = () => { this.statusMenuFor = null; };
-      document.addEventListener('click', this._onOutsideClick);
-    },
-    beforeUnmount() {
-      document.removeEventListener('click', this._onOutsideClick);
-    },
-  },
-  data() {
-    return {
-      showForm: false,
-      showDueDateForm: false,
-      showImportForm: false,
-      tasks: this.loadTasks(),
-      editingTaskId: null,
-      q: '',
-      showImportConfirm: false,
-      importedTasksPreview: [],
-      statusMenuFor: null,
-    };
-  },
-  computed: {
-    completedCount() {
-      return this.tasks.filter(t => t.completed).length;
-    },
-    totalCount() {
-      return this.tasks.length;
-    },
-    activeCount() {
-      return this.tasks.filter(t => !t.completed).length;
-    },
-    overdueCount() {
-      const now = new Date();
-      return this.tasks.filter(t => {
-        if (t.completed) return false;
-        if (!t.dueDate || t.dueDate === 'No due date') return false;
-        const d = new Date(t.dueDate);
-        if (isNaN(d.getTime())) return false;
-        return d < now;
-      }).length;
-    },
-  },
-  methods: {
-    openForm() {
-      this.showForm = true;
-    },
-    openDueDateForm(e) {
-      const id = e.target.id;
-      this.editingTaskId = id;
-      this.showDueDateForm = true;
-    },
-    openImportForm() {
-      this.showImportForm = true;
-    },
-    uid() {
-      return Math.random().toString(36).slice(2) + Date.now().toString(36);
-    },
-    saveTasks() {
-      localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
-    },
-    loadTasks() {
-      try {
-        const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
-        return tasks.map(task => {
-          const t = {
-            completed: false,
-            completedAt: null,
-            status: 'To Do',
-            ...task,
-            dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
-          };
-          if (!('status' in task)) t.status = t.completed ? 'Completed' : 'To Do';
-          return t;
-        });
-      } catch {
-        return [];
-      }
-    },
-    onCreate(payload) {
-      const title = String(payload.title || '').trim();
-      const description = String(payload.description || '').trim();
-      let dueDate = String(payload.dueDate || '').trim();
-
-      if (dueDate !== '') {
-        const dueDate = new Date(payload.dueDate).toISOString();
-      } else if (!dueDate) {
-        dueDate = "No due date";
-      }
-
-      if (!title) return;
-
-      const task = {
-        id: this.uid(),
-        title,
-        description,
-        dueDate,
-        completed: false,
-        completedAt: null,
-        createdAt: new Date().toISOString()
-      };
-
-      this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      this.saveTasks();
-      this.showForm = false;
-    },
-    deleteTask(taskId) {
-      // Remove the task with the given id
-      this.tasks = this.tasks.filter(task => task.id !== taskId);
-      this.saveTasks();
-    },
-    onCreateDueDateForm(payload) {
-      const dueDate = String(payload.dueDate || '').trim();
-      if (!dueDate || !this.editingTaskId) {
-        this.showDueDateForm = false;
-        return;
-      }
-      this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? { ...task, dueDate } : task);
-      this.saveTasks();
-      this.showDueDateForm = false;
-      this.editingTaskId = null;
-    },
-    onStatusChange(t, status) {
-      t.status = status;
-      if (status === 'Completed') {
-        if (!t.completed) t.completedAt = new Date().toISOString();
-        t.completed = true;
-      } else {
-        t.completed = false;
-        t.completedAt = null;
-      }
-      this.saveTasks();
-    },
-    statusClass(s) {
-      switch (s) {
-        case 'Completed':
-          return 'bg-emerald-600 text-white border-emerald-700 focus:ring-emerald-300';
-        case 'In Progress':
-          return 'bg-blue-600 text-white border-blue-700 focus:ring-blue-300';
-        default: // 'To Do'
-          return 'bg-slate-600 text-white border-slate-700 focus:ring-slate-300';
-      }
-    },
-    toggleStatusMenu(task) {
-      this.statusMenuFor = (this.statusMenuFor === task.id) ? null : task.id;
-    },
-    closeStatusMenu() {
-      this.statusMenuFor = null;
-    },
-    chooseStatus(t, status) {
-      t.status = status;
-      if (status === 'Completed') {
-        if (!t.completed) t.completedAt = new Date().toISOString();
-        t.completed = true;
-      } else {
-        t.completed = false;
-        t.completedAt = null;
-      }
-      this.saveTasks();
-      this.closeStatusMenu();
-    },
-    statusBadgeClass(s) {
-      switch (s) {
-        case 'Completed':   return 'bg-emerald-600';
-        case 'In Progress': return 'bg-blue-600';
-        default:            return 'bg-slate-600'; // 'To Do'
-      }
-    },
-    toggleComplete(t) {
-      t.completed = !t.completed;
-      t.completedAt = t.completed ? new Date().toISOString() : null;
-      this.saveTasks();
-    },
-    clearCompleted() {
-      if (!this.completedCount) return;
-      if (!confirm('Remove all completed tasks?')) return;
-      this.tasks = this.tasks.filter(t => !t.completed);
-      this.saveTasks();
-    },
-    onImport(payload) {
-      const file = payload.tasksFile;
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const importedTasks = JSON.parse(e.target.result);
-          if (Array.isArray(importedTasks)) {
-            const sanitizedTasks = importedTasks.map(t => TaskUtils.createTask(t)).filter(t => t.title);
-            console.log(sanitizedTasks);
-            if (sanitizedTasks.length) {
-              this.importedTasksPreview = sanitizedTasks;
-              this.showImportConfirm = true;
+    `, components: {
+        'task-form': TaskForm,
+        'dueDate-form': DueDateForm,
+        'import-form': ImportForm,
+        'createTask': TaskUtils.createTask,
+        mounted() {
+            this._onOutsideClick = () => {
+                this.statusMenuFor = null;
+            };
+            document.addEventListener('click', this._onOutsideClick);
+        },
+        beforeUnmount() {
+            document.removeEventListener('click', this._onOutsideClick);
+        },
+    }, data() {
+        return {
+            showForm: false,
+            showDueDateForm: false,
+            showImportForm: false,
+            tasks: this.loadTasks(),
+            editingTaskId: null,
+            q: '',
+            showImportConfirm: false,
+            importedTasksPreview: [],
+            statusMenuFor: null,
+        };
+    }, computed: {
+        completedCount() {
+            return this.tasks.filter(t => t.completed).length;
+        }, totalCount() {
+            return this.tasks.length;
+        }, activeCount() {
+            return this.tasks.filter(t => !t.completed).length;
+        }, overdueCount() {
+            const now = new Date();
+            return this.tasks.filter(t => {
+                if (t.completed) return false;
+                if (!t.dueDate || t.dueDate === 'No due date') return false;
+                const d = new Date(t.dueDate);
+                if (isNaN(d.getTime())) return false;
+                return d < now;
+            }).length;
+        },
+    }, methods: {
+        openForm() {
+            this.showForm = true;
+        }, openDueDateForm(e) {
+            const id = e.target.id;
+            this.editingTaskId = id;
+            this.showDueDateForm = true;
+        }, openImportForm() {
+            this.showImportForm = true;
+        }, uid() {
+            return Math.random().toString(36).slice(2) + Date.now().toString(36);
+        }, saveTasks() {
+            localStorage.setItem('scu.todo.tasks.v1', JSON.stringify(this.tasks));
+        }, loadTasks() {
+            try {
+                const tasks = JSON.parse(localStorage.getItem('scu.todo.tasks.v1') || '[]');
+                return tasks.map(task => {
+                    const t = {
+                        completed: false,
+                        completedAt: null,
+                        status: 'To Do', ...task,
+                        dueDate: typeof task.dueDate === 'undefined' ? 'No due date' : task.dueDate
+                    };
+                    if (!('status' in task)) t.status = t.completed ? 'Completed' : 'To Do';
+                    return t;
+                });
+            } catch {
+                return [];
             }
-          } else {
-            alert('Imported file must contain an array of tasks.');
-          }
-        } catch {
-          alert('Failed to import tasks. Please ensure the file is a valid JSON.');
+        }, onCreate(payload) {
+            const title = String(payload.title || '').trim();
+            const description = String(payload.description || '').trim();
+            let dueDate = String(payload.dueDate || '').trim();
+
+            if (dueDate !== '') {
+                const dueDate = new Date(payload.dueDate).toISOString();
+            } else if (!dueDate) {
+                dueDate = "No due date";
+            }
+
+            if (!title) return;
+
+            const task = {
+                id: this.uid(),
+                title,
+                description,
+                dueDate,
+                completed: false,
+                completedAt: null,
+                createdAt: new Date().toISOString()
+            };
+
+            this.tasks = [task, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            this.saveTasks();
+            this.showForm = false;
+        }, deleteTask(taskId) {
+            // Remove the task with the given id
+            this.tasks = this.tasks.filter(task => task.id !== taskId);
+            this.saveTasks();
+        }, onCreateDueDateForm(payload) {
+            const dueDate = String(payload.dueDate || '').trim();
+            if (!dueDate || !this.editingTaskId) {
+                this.showDueDateForm = false;
+                return;
+            }
+            this.tasks = this.tasks.map(task => task.id === this.editingTaskId ? {...task, dueDate} : task);
+            this.saveTasks();
+            this.showDueDateForm = false;
+            this.editingTaskId = null;
+        }, onStatusChange(t, status) {
+            t.status = status;
+            if (status === 'Completed') {
+                if (!t.completed) t.completedAt = new Date().toISOString();
+                t.completed = true;
+            } else {
+                t.completed = false;
+                t.completedAt = null;
+            }
+            this.saveTasks();
+        }, statusClass(s) {
+            switch (s) {
+                case 'Completed':
+                    return 'bg-emerald-600 text-white border-emerald-700 focus:ring-emerald-300';
+                case 'In Progress':
+                    return 'bg-blue-600 text-white border-blue-700 focus:ring-blue-300';
+                default: // 'To Do'
+                    return 'bg-slate-600 text-white border-slate-700 focus:ring-slate-300';
+            }
+        }, toggleStatusMenu(task) {
+            this.statusMenuFor = (this.statusMenuFor === task.id) ? null : task.id;
+        }, closeStatusMenu() {
+            this.statusMenuFor = null;
+        }, chooseStatus(t, status) {
+            t.status = status;
+            if (status === 'Completed') {
+                if (!t.completed) t.completedAt = new Date().toISOString();
+                t.completed = true;
+            } else {
+                t.completed = false;
+                t.completedAt = null;
+            }
+            this.saveTasks();
+            this.closeStatusMenu();
+        }, statusBadgeClass(s) {
+            switch (s) {
+                case 'Completed':
+                    return 'bg-emerald-600';
+                case 'In Progress':
+                    return 'bg-blue-600';
+                default:
+                    return 'bg-slate-600'; // 'To Do'
+            }
+        }, toggleComplete(t) {
+            t.completed = !t.completed;
+            t.completedAt = t.completed ? new Date().toISOString() : null;
+            this.saveTasks();
+        }, clearCompleted() {
+            if (!this.completedCount) return;
+            if (!confirm('Remove all completed tasks?')) return;
+            this.tasks = this.tasks.filter(t => !t.completed);
+            this.saveTasks();
+        }, onImport(payload) {
+            console.log('Import payload: ', payload)
+            const file = payload.tasksFile;
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedTasks = JSON.parse(e.target.result);
+                    if (Array.isArray(importedTasks)) {
+                        const sanitizedTasks = importedTasks
+                            .map(t => {
+                                const newTask = createTask(t);
+                                newTask.id = this.uid(); // Ensure new unique ID
+                                return newTask;
+                            })
+                            .filter(t => t.title);
+                        console.log(sanitizedTasks);
+                        console.log(sanitizedTasks.length);
+                        if (sanitizedTasks.length) {
+                            this.importedTasksPreview = sanitizedTasks;
+                            this.showImportConfirm = true;
+                            console.log(this.showImportConfirm)
+                        }
+                    } else {
+                        alert('Imported file must contain an array of tasks.');
+                    }
+                } catch {
+                    alert('Failed to import tasks. Please ensure the file is a valid JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }, confirmImport() {
+
+            this.tasks = [...this.importedTasksPreview, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            this.showImportConfirm = false;
+            this.importedTasksPreview = [];
+            this.saveTasks();
+        }, cancelImport() {
+            this.showImportConfirm = false;
+            this.importedTasksPreview = [];
+        }, exportTasks() {
+            if (this.tasks.length === 0) {
+                alert('No tasks to export.');
+                return;
+            }
+            const exportData = this.tasks.map(task => createTask(task));
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+
+            const currentDate = new Date().toISOString().split('T')[0];
+            const filename = `tasks-${currentDate}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, getDueDateBgClass(dueDate) {
+            if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
+            const dueDateObj = new Date(dueDate);
+            const now = new Date();
+            const diffTime = dueDateObj - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return 'bg-red-600';
+            if (diffDays === 1) return 'bg-orange-500';
+            if (diffDays <= 3 && diffDays >= 1) return 'bg-yellow-400';
+            if (diffDays > 3) return 'bg-green-600';
+            if (diffDays <= 1) return 'bg-black';
+        }, getDueDateContent(dueDate) {
+            if (!dueDate || dueDate === "No due date") return 'No due date';
+            const dueDateObj = new Date(dueDate);
+            const now = new Date();
+            const diffTime = dueDateObj - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return 'Due today';
+            if (diffDays === 1) return 'Due tomorrow';
+            if (diffDays <= 1) return 'Overdue';
+            return `Due in ${diffDays} days`;
         }
-      };
-      reader.readAsText(file);
-    },
-    confirmImport() {
-      this.tasks = [...this.importedTasksPreview, ...this.tasks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      this.showImportConfirm = false;
-      this.importedTasksPreview = [];
-      this.saveTasks();
-    },
-    cancelImport() {
-      this.showImportConfirm = false;
-      this.importedTasksPreview = [];
-    },
-    exportTasks() {
-      if (this.tasks.length === 0) {
-        alert('No tasks to export.');
-        return;
-      }
-      const exportData = this.tasks.map(task => createTask(task));
-      const jsonString = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const currentDate = new Date().toISOString().split('T')[0];
-      const filename = `tasks-${currentDate}.json`;
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    },
-    getDueDateBgClass(dueDate) {
-      if (!dueDate || dueDate === "No due date") return 'bg-gray-400';
-      const dueDateObj = new Date(dueDate);
-      const now = new Date();
-      const diffTime = dueDateObj - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return 'bg-red-600';
-      if (diffDays === 1) return 'bg-orange-500';
-      if (diffDays <= 3 && diffDays >= 1) return 'bg-yellow-400';
-      if (diffDays > 3) return 'bg-green-600';
-      if (diffDays <= 1) return 'bg-black';
-    },
-    getDueDateContent(dueDate) {
-      if (!dueDate || dueDate === "No due date") return 'No due date';
-      const dueDateObj = new Date(dueDate);
-      const now = new Date();
-      const diffTime = dueDateObj - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return 'Due today';
-      if (diffDays === 1) return 'Due tomorrow';
-      if (diffDays <= 1) return 'Overdue';
-      return `Due in ${diffDays} days`;
     }
-  }
 };

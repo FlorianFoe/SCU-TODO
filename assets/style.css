@@ -2,3 +2,11 @@
 body {
     font-family: 'Inter', sans-serif;
 }
+.status-select {
+  border-radius: 0.5rem; /* matches rounded-lg */
+}
+.status-select option { padding: 6px 8px; }
+/* Optional per-option coloring (browser-dependent) */
+.status-select option[value="To Do"]      { background-color:#475569; color:#fff; }
+.status-select option[value="In Progress"]{ background-color:#2563eb; color:#fff; }
+.status-select option[value="Completed"]  { background-color:#059669; color:#fff; }

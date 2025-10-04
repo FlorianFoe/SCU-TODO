@@ -170,16 +170,8 @@ const App = {
                       {{ t.description }}
                     </div>
 
-                    <!-- Raw due date + edit button (unchanged) -->
                     <div class="flex gap-4 items-center mt-2">
                       <span>{{ t.dueDate }}</span>
-                      <div
-                        @click="openDueDateForm"
-                        :id="t.id"
-                        class="rounded-[50%] bg-green-700 w-fit px-1 text-white hover:scale-[110%] cursor-pointer"
-                      >
-                        ✎
-                      </div>
                     </div>
                   </div>
 
@@ -204,14 +196,22 @@ const App = {
                 </div>
               </div>
 
-              <!-- Delete button -->
-              <div
-                class="w-0 group-hover:w-16 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
-                @click="deleteTask(t.id)"
-                title="Delete Task"
-              >
-                <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
-              </div>
+              <div class="w-0 group-hover:w-16 overflow-hidden flex flex-col self-stretch transition-all duration-300">
+                <div
+                    class="flex-1 bg-blue-500 hover:bg-blue-600 flex items-center justify-center cursor-pointer transition-all duration-300"
+                    @click="openDueDateForm"
+                    :data-task-id="t.id"
+                    title="Edit Item"
+                  >
+                  <span class="text-white text-xl font-bold whitespace-nowrap">✎</span>
+                </div>
+                <div
+                  class="flex-1 bg-red-500 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-all duration-300"
+                  @click="deleteTask(t.id)"
+                  title="Delete Task"
+                >
+                  <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
+                </div>
             </div>
           </li>
         </ul>
@@ -272,7 +272,7 @@ const App = {
       this.showForm = true;
     },
     openDueDateForm(e) {
-      const id = e.target.id;
+      const id = e.target.closest('[data-task-id]').getAttribute('data-task-id');
       this.editingTaskId = id;
       this.showDueDateForm = true;
     },
@@ -309,7 +309,7 @@ const App = {
       let dueDate = String(payload.dueDate || '').trim();
 
       if (dueDate !== '') {
-        const dueDate = new Date(payload.dueDate).toISOString();
+        dueDate = new Date(payload.dueDate).toISOString();
       } else if (!dueDate) {
         dueDate = "No due date";
       }

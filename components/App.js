@@ -32,7 +32,7 @@ const App = {
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
             </button>
-            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openForm">New Task</button>
+            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold" @click="openNewTaskForm">New Task</button>
           </div>
         </div>
       </header>
@@ -154,14 +154,15 @@ const App = {
                           {{ getDueDateContent(t.dueDate) }}
                         </div>
 
-                        <!-- Priority Selector and Marker -->
-                        <div class="text-sm text-slate-400">Priority:
-                          <span :class="getPriorityBoxColour(t, n)" v-for="n in 5" :key="n" @click="setPriority(t, n)">
-                            {{ n <= (t.priority || 0) ? '\u25A0' : '\u25A1' }}
-                          </span>
-                        </div>
                     </div>
 
+                    <!-- Priority Selector and Marker -->
+                    <div class="text-sm text-slate-400">Priority:
+                      <span :class="getPriorityBoxColour(t, n)" v-for="n in 5" :key="n" @click="setPriority(t, n)">
+                        {{ n <= (t.priority || 0) ? '\u25A0' : '\u25A1' }}
+                      </span>
+                    </div>
+                        
                     <!-- Description -->
                     <div v-if="t.description" class="text-sm text-slate-600 whitespace-pre-wrap mt-1 max-w-lg">
                       {{ t.description }}
@@ -263,13 +264,12 @@ const App = {
         document.removeEventListener('click', this._onOutsideClick);
     },
     methods: {
-        openForm() {
+        openNewTaskForm() {
             this.showForm = true;
         },
-        openDueDateForm(e) {
-            const id = e.target.id;
-            this.editingTaskId = id;
-            this.showDueDateForm = true;
+        openEditForm(task) {
+            this.editingTask = { ...task };
+            this.showEditForm = true;
         },
         openImportForm() {
             this.showImportForm = true;

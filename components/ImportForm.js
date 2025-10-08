@@ -14,7 +14,10 @@ const ImportForm = {
             if (!tasksFile) {
                 this.error = 'Please select a file to import.';
                 return;
-            } else if (tasksFile.type !== 'application/json') {
+            } else if (
+                tasksFile.type !== 'application/json' &&
+                !tasksFile.name.endsWith('.json')
+            ) {
                 this.error = 'Only JSON files are supported.';
                 return;
             }

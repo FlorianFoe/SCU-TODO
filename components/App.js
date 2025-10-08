@@ -392,7 +392,7 @@ const App = {
                         .map(t => TaskUtils.createTask(t))
                         .filter(t => t && t.title)
                         .map(t => ({
-                            id: t.id || this.uid(),
+                            id: this.uid(),
                             title: String(t.title),
                             description: t.description ? String(t.description) : '',
                             dueDate: t.dueDate ? String(t.dueDate) : 'No due date',

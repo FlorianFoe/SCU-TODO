@@ -78,9 +78,9 @@ const App = {
           @dragstart="onDragStart(i)"
           @dragover="onDragOver(i, $event)"
           @drop="onDrop(i)"
-          class="bg-white border rounded-xl group hover:shadow-md transition-shadow"
+          class="bg-white border rounded-xl group hover:shadow-md transition-shadow flex flex-row"
         >
-          <div class="flex transition-transform duration-300">
+          <div class="flex transition-transform w-[100%] duration-300">
             <span class="cursor-move px-2 py-4">&#x2630;</span>
 
             <div class="flex-1">
@@ -155,7 +155,11 @@ const App = {
                 </div>
 
                 <!-- Right rail: edit/delete -->
-                <div class="w-0 group-hover:w-16 overflow-hidden rounded-r-xl flex flex-col self-stretch transition-all duration-300">
+                
+              </div>
+            </div>
+          </div>
+          <div class="w-0 group-hover:w-16 overflow-hidden rounded-r-xl flex flex-col self-stretch transition-all duration-300">
                   <div
                     class="flex-1 bg-blue-500 hover:bg-blue-600 flex items-center justify-center cursor-pointer transition-all duration-300"
                     @click="openEditForm(t)"
@@ -172,9 +176,6 @@ const App = {
                     <span class="text-white text-xl font-bold whitespace-nowrap">✕</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
         </li>
       </ul>
 

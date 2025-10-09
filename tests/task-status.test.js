@@ -9,6 +9,11 @@ window.TaskStatusTests = async function() {
         let originalLocalStorage;
 
         beforeEach(() => {
+            // Clear localStorage for clean isolation
+            if (window.localStorage && window.localStorage.clear) {
+                window.localStorage.clear();
+            }
+
             // Mock localStorage for clean isolation
             originalLocalStorage = window.localStorage;
             window.localStorage = {
@@ -18,7 +23,7 @@ window.TaskStatusTests = async function() {
                 clear: () => {}
             };
 
-            // Create fresh test tasks for each test
+            // Create completely fresh test tasks for each test case
             testTasks = [
                 {
                     id: 'task-1',
@@ -43,7 +48,7 @@ window.TaskStatusTests = async function() {
                 }
             ];
 
-            // Simple mock app object - corrected logic to match real app
+            // Create completely new mock app object for each test case
             mockApp = {
                 tasks: JSON.parse(JSON.stringify(testTasks)), // Deep copy for isolation
                 statusMenuFor: null,
@@ -89,15 +94,17 @@ window.TaskStatusTests = async function() {
         });
 
         afterEach(() => {
+            // Clear localStorage after each test
+            if (originalLocalStorage && originalLocalStorage.clear) {
+                originalLocalStorage.clear();
+            }
+
             // Restore original localStorage
             if (originalLocalStorage) {
                 window.localStorage = originalLocalStorage;
             }
 
-            // Reset variables but don't null them during test execution
-            if (testTasks) {
-                testTasks.length = 0;
-            }
+            // Don't modify arrays - let beforeEach create fresh objects
         });
 
         // TC10: Mark Task as Completed

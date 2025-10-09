@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App Unit Tests</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background: #f8fafc;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn.secondary {
+            background: #6b7280;
+        }
+        .btn.secondary:hover {
+            background: #4b5563;
+        }
+        .test-results {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ToDo App Unit Tests</h1>
+            <p>Comprehensive test suite for the Vue.js ToDo application based on requirements R1-R7.</p>
+
+            <div class="test-controls">
+                <button class="btn" onclick="runAllTests()">🚀 Alle Tests ausführen</button>
+                <button class="btn" onclick="runTaskCreationTests()">📝 Task Creation Tests (R1)</button>
+                <button class="btn" onclick="runTaskEditingTests()">✏️ Task Editing Tests (R2)</button>
+                <button class="btn" onclick="runTaskDeletionTests()">🗑️ Task Deletion Tests (R3)</button>
+                <button class="btn" onclick="runTaskStatusTests()">✅ Task Status Tests (R4)</button>
+                <button class="btn" onclick="runDueDateTests()">📅 Due Date Tests (R5)</button>
+                <button class="btn" onclick="runImportTests()">📁 Import Tests (R6)</button>
+                <button class="btn" onclick="runPersistenceTests()">💾 Persistence Tests (R7)</button>
+                <button class="btn secondary" onclick="clearResults()">🧹 Ergebnisse löschen</button>
+            </div>
+        </div>
+
+        <div id="test-results" class="test-results">
+            <div class="loading">
+                Klicken Sie auf eine Schaltfläche, um Tests zu starten.
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Simple Test Framework -->
+    <script>
+        // Simple browser-based test framework
+        class SimpleTestFramework {
+            constructor() {
+                this.currentDescribe = null;
+                this.results = [];
+                this.mocks = new Map();
+            }
+
+            describe(name, fn) {
+                this.currentDescribe = name;
+                try {
+                    fn();
+                } catch (error) {
+                    this.results.push({
+                        suite: name,
+                        test: 'Suite Error',
+                        status: 'fail',
+                        error: error.message
+                    });
+                }
+            }
+
+            it(name, fn) {
+                try {
+                    fn();
+                    this.results.push({
+                        suite: this.currentDescribe,
+                        test: name,
+                        status: 'pass',
+                        error: null
+                    });
+                } catch (error) {
+                    this.results.push({
+                        suite: this.currentDescribe,
+                        test: name,
+                        status: 'fail',
+                        error: error.message
+                    });
+                }
+            }
+
+            beforeEach(fn) {
+                // Simple implementation - just call it
+                try {
+                    fn();
+                } catch (error) {
+                    console.warn('BeforeEach error:', error);
+                }
+            }
+
+            afterEach(fn) {
+                // Simple implementation - just call it
+                try {
+                    fn();
+                } catch (error) {
+                    console.warn('AfterEach error:', error);
+                }
+            }
+
+            expect(actual) {
+                return {
+                    toBe: (expected) => {
+                        if (actual !== expected) {
+                            throw new Error(`Expected ${JSON.stringify(expected)}, but got ${JSON.stringify(actual)}`);
+                        }
+                    },
+                    toEqual: (expected) => {
+                        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                            throw new Error(`Expected ${JSON.stringify(expected)}, but got ${JSON.stringify(actual)}`);
+                        }
+                    },
+                    toBeDefined: () => {
+                        if (actual === undefined) {
+                            throw new Error('Expected value to be defined');
+                        }
+                    },
+                    toBeUndefined: () => {
+                        if (actual !== undefined) {
+                            throw new Error('Expected value to be undefined');
+                        }
+                    },
+                    not: {
+                        toBe: (expected) => {
+                            if (actual === expected) {
+                                throw new Error(`Expected not to be ${JSON.stringify(expected)}`);
+                            }
+                        },
+                        toThrow: () => {
+                            // For functions that should not throw
+                            try {
+                                if (typeof actual === 'function') {
+                                    actual();
+                                }
+                            } catch (error) {
+                                throw new Error('Expected function not to throw, but it threw: ' + error.message);
+                            }
+                        },
+                        toHaveBeenCalled: () => {
+                            if (actual && actual._mockCalled) {
+                                throw new Error('Expected mock not to have been called');
+                            }
+                        }
+                    },
+                    toHaveBeenCalled: () => {
+                        if (!actual || !actual._mockCalled) {
+                            throw new Error('Expected mock to have been called');
+                        }
+                    },
+                    toHaveBeenCalledWith: (expected) => {
+                        if (!actual || !actual._mockCalled || !actual._mockCalledWith.includes(expected)) {
+                            throw new Error(`Expected mock to have been called with ${JSON.stringify(expected)}`);
+                        }
+                    },
+                    toHaveBeenCalledTimes: (times) => {
+                        if (!actual || actual._mockCallCount !== times) {
+                            throw new Error(`Expected mock to have been called ${times} times, but was called ${actual ? actual._mockCallCount : 0} times`);
+                        }
+                    }
+                };
+            }
+
+            vi = {
+                fn: (implementation) => {
+                    const mockFn = function(...args) {
+                        mockFn._mockCalled = true;
+                        mockFn._mockCallCount = (mockFn._mockCallCount || 0) + 1;
+                        mockFn._mockCalledWith = mockFn._mockCalledWith || [];
+                        mockFn._mockCalledWith.push(...args);
+                        if (implementation) {
+                            return implementation.apply(this, args);
+                        }
+                    };
+                    mockFn._mockCalled = false;
+                    mockFn._mockCallCount = 0;
+                    mockFn._mockCalledWith = [];
+                    mockFn.mockImplementation = (fn) => {
+                        implementation = fn;
+                        return mockFn;
+                    };
+                    mockFn.mockRestore = () => {
+                        // Simple restore
+                    };
+                    return mockFn;
+                },
+                spyOn: (obj, method) => {
+                    const original = obj[method];
+                    const spy = this.vi.fn(original);
+                    obj[method] = spy;
+                    spy.mockRestore = () => {
+                        obj[method] = original;
+                    };
+                    return spy;
+                },
+                restoreAllMocks: () => {
+                    // Simple implementation
+                }
+            };
+
+            async runTestSuite(suiteName, testFunction) {
+                this.results = [];
+
+                // Make functions globally available
+                window.describe = this.describe.bind(this);
+                window.it = this.it.bind(this);
+                window.beforeEach = this.beforeEach.bind(this);
+                window.afterEach = this.afterEach.bind(this);
+                window.expect = this.expect.bind(this);
+                window.vi = this.vi;
+
+                try {
+                    await testFunction();
+                } catch (error) {
+                    this.results.push({
+                        suite: suiteName,
+                        test: 'Test Suite Error',
+                        status: 'fail',
+                        error: error.message
+                    });
+                }
+
+                this.displayResults(suiteName);
+                return this.results;
+            }
+
+            displayResults(suiteName) {
+                const container = document.getElementById('test-results');
+                const passCount = this.results.filter(r => r.status === 'pass').length;
+                const failCount = this.results.filter(r => r.status === 'fail').length;
+                const totalCount = this.results.length;
+
+                const suiteDiv = document.createElement('div');
+                suiteDiv.style.cssText = 'border-bottom: 1px solid #e5e7eb; padding: 20px;';
+
+                const header = document.createElement('div');
+                header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
+
+                const title = document.createElement('h2');
+                title.style.cssText = 'margin: 0; color: #1f2937; font-size: 18px;';
+                title.textContent = suiteName;
+
+                const summary = document.createElement('div');
+                summary.style.cssText = `
+                    background: ${failCount === 0 ? '#10b981' : '#ef4444'};
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    font-weight: 500;
+                `;
+                summary.textContent = `${passCount}/${totalCount} Tests bestanden`;
+
+                header.appendChild(title);
+                header.appendChild(summary);
+                suiteDiv.appendChild(header);
+
+                this.results.forEach(result => {
+                    const testDiv = document.createElement('div');
+                    testDiv.style.cssText = `
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 10px;
+                        padding: 8px 0;
+                        border-left: 3px solid ${result.status === 'pass' ? '#10b981' : '#ef4444'};
+                        padding-left: 12px;
+                        margin: 5px 0;
+                    `;
+
+                    const icon = document.createElement('span');
+                    icon.style.cssText = `
+                        color: ${result.status === 'pass' ? '#10b981' : '#ef4444'};
+                        font-weight: bold;
+                        min-width: 20px;
+                    `;
+                    icon.textContent = result.status === 'pass' ? '✓' : '✗';
+
+                    const content = document.createElement('div');
+                    content.style.cssText = 'flex: 1;';
+
+                    const testName = document.createElement('div');
+                    testName.style.cssText = 'font-weight: 500; color: #374151;';
+                    testName.textContent = result.test;
+
+                    content.appendChild(testName);
+
+                    if (result.error) {
+                        const error = document.createElement('div');
+                        error.style.cssText = 'color: #dc2626; font-size: 12px; margin-top: 4px; font-family: monospace; white-space: pre-wrap;';
+                        error.textContent = result.error;
+                        content.appendChild(error);
+                    }
+
+                    testDiv.appendChild(icon);
+                    testDiv.appendChild(content);
+                    suiteDiv.appendChild(testDiv);
+                });
+
+                container.appendChild(suiteDiv);
+            }
+        }
+
+        // Create global test runner instance
+        window.TestRunner = new SimpleTestFramework();
+    </script>
+
+    <!-- Load application utilities first -->
+    <script src="utils/TaskUtils.js"></script>
+
+    <!-- Create mock components to avoid undefined errors -->
+    <script>
+        // Mock missing components to prevent errors
+        window.TaskForm = {
+            template: '<div>Mock TaskForm</div>',
+            emits: ['close', 'create']
+        };
+
+        window.EditTaskForm = {
+            template: '<div>Mock EditTaskForm</div>',
+            props: ['task'],
+            emits: ['close', 'save']
+        };
+
+        window.ImportForm = {
+            template: '<div>Mock ImportForm</div>',
+            emits: ['close', 'import']
+        };
+
+        window.DueDateForm = {
+            template: '<div>Mock DueDateForm</div>',
+            emits: ['close', 'save']
+        };
+    </script>
+
+    <!-- Load App component -->
+    <script src="components/App.js"></script>
+
+    <!-- Load test files -->
+    <script src="tests/task-creation.test.js"></script>
+    <script src="tests/task-editing.test.js"></script>
+    <script src="tests/task-deletion.test.js"></script>
+    <script src="tests/task-status.test.js"></script>
+    <script src="tests/due-date.test.js"></script>
+    <script src="tests/import.test.js"></script>
+    <script src="tests/persistence.test.js"></script>
+
+    <script>
+        function clearResults() {
+            const container = document.getElementById('test-results');
+            container.innerHTML = '<div class="loading">Ergebnisse gelöscht. Wählen Sie eine Test-Suite aus.</div>';
+        }
+
+        async function runAllTests() {
+            clearResults();
+            await runTaskCreationTests();
+            await runTaskEditingTests();
+            await runTaskDeletionTests();
+            await runTaskStatusTests();
+            await runDueDateTests();
+            await runImportTests();
+            await runPersistenceTests();
+        }
+
+        async function runTaskCreationTests() {
+            if (window.TaskCreationTests) {
+                await TestRunner.runTestSuite('R1: Task Creation Tests', window.TaskCreationTests);
+            }
+        }
+
+        async function runTaskEditingTests() {
+            if (window.TaskEditingTests) {
+                await TestRunner.runTestSuite('R2: Task Editing Tests', window.TaskEditingTests);
+            }
+        }
+
+        async function runTaskDeletionTests() {
+            if (window.TaskDeletionTests) {
+                await TestRunner.runTestSuite('R3: Task Deletion Tests', window.TaskDeletionTests);
+            }
+        }
+
+        async function runTaskStatusTests() {
+            if (window.TaskStatusTests) {
+                await TestRunner.runTestSuite('R4: Task Status Tests', window.TaskStatusTests);
+            }
+        }
+
+        async function runDueDateTests() {
+            if (window.DueDateTests) {
+                await TestRunner.runTestSuite('R5: Due Date Tests', window.DueDateTests);
+            }
+        }
+
+        async function runImportTests() {
+            if (window.ImportTests) {
+                await TestRunner.runTestSuite('R6: Import Tests', window.ImportTests);
+            }
+        }
+
+        async function runPersistenceTests() {
+            if (window.PersistenceTests) {
+                await TestRunner.runTestSuite('R7: Persistence Tests', window.PersistenceTests);
+            }
+        }
+    </script>
+</body>
+</html>
